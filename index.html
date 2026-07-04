@@ -17,21 +17,22 @@
         input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff; }
         
         .date-nav { display: flex; gap: 5px; align-items: center; }
-        .date-nav button { width: auto; flex: 1; padding: 10px; background-color: #0288d1; font-weight: bold; margin: 0; }
+        .date-nav button { width: auto; flex: 1; padding: 10px; background-color: #0288d1; font-weight: bold; margin: 0; color: white; border: none; border-radius: 5px;}
         .date-nav input[type="date"] { flex: 3; }
 
         button { width: 100%; padding: 10px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
         button.download { background-color: #1565c0; }
-        button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; }
+        button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; color: white; border: none;}
         
         .summary-box { margin-top: 15px; padding: 12px; background-color: #efebe9; border-radius: 5px; border-left: 5px solid #ff9800; }
         .summary-box h3 { margin: 0 0 8px 0; font-size: 16px; color: #5d4037; border-bottom: 1px dashed #bcaaa4; padding-bottom: 4px; }
-        .summary-box p { margin: 4px 0; font-size: 14px; display: flex; justify-content: space-between; }
+        .summary-box p { margin: 6px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .bold { font-weight: bold; color: #333; }
         .red-bold { font-weight: bold; color: #c62828; }
         .green-bold { font-weight: bold; color: #2e7d32; }
         
-        .potongan-hemat-box { background-color: #fff3e0; padding: 10px; border: 1px solid #ffe0b2; border-radius: 5px; margin-top: 10px; }
+        .potongan-section { border-top: 1px solid #d7ccc8; margin-top: 6px; padding-top: 6px; }
+        .potongan-hemat-box { background-color: #fff3e0; padding: 10px; border: 1px solid #ffe0b2; border-radius: 5px; margin-top: 8px; }
         .potongan-hemat-box label { color: #e65100; font-size: 13px; }
         .potongan-hemat-box input { padding: 6px; font-size: 14px; margin-top: 4px; }
 
@@ -40,7 +41,7 @@
         th { background-color: #e8f5e9; }
         #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; width: 100%; }
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; margin: 0; width: auto; flex: 1; }
+        .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;}
         .tab-btn.active { background-color: #2e7d32; color: white; }
         .badge { padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; }
         .bg-hemat { background-color: #43a047; }
@@ -89,8 +90,14 @@
         <h3 id="judulRingkasan">Ringkasan Hari Ini</h3>
         <p>Total Orderan Sukses: <span id="totalOrder" class="bold">0</span></p>
         <p>Total Gross (Pendapatan Kotor): <span id="sumGross" class="bold">Rp 0</span></p>
-        <p>Total Potongan Komisi: <span id="sumPotongan" class="red-bold">Rp 0</span></p>
-        <p>Estimasi Pendapatan Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
+        
+        <div class="potongan-section">
+            <p>Potongan Langsung Standard (8%): <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
+            <p>Potongan Esok Hari Hemat: <span id="sumPotonganHemat" class="red-bold">Rp 0</span></p>
+            <p style="border-top: 1px dashed #bcaaa4; padding-top: 4px; font-weight: bold;">Total Komisi (Kombinasi): <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
+        </div>
+
+        <p style="margin-top: 10px; border-top: 1px solid #d7ccc8; padding-top: 6px;">Estimasi Pendapatan Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
 
         <div class="potongan-hemat-box" id="boxPotonganAsliHemat">
             <label for="potonganAsliInput"><b>Potongan Asli GB Hemat Esok Hari (Rp):</b><br><small>*Masukkan nominal transaksi 'Deduction' dari aplikasi GrabDriver</small></label>
@@ -183,7 +190,7 @@
 
         if (layanan === 'standard') {
             net = nilaiInput;
-            gross = Math.round(net * (100 / 92));
+            gross = Math.round(net * (100 / 92)); // Kebalikan dari potongan langsung 8%
             potongan = gross - net;
         } else {
             gross = nilaiInput;
@@ -236,7 +243,11 @@
         const boxPotongan = document.getElementById('boxPotonganAsliHemat');
         tbody.innerHTML = '';
 
-        let totalGross = 0, totalPotongan = 0, totalNet = 0, totalOrder = 0;
+        let totalGross = 0, totalNet = 0, totalOrder = 0;
+        let totalPotonganStandard = 0, totalPotonganHemat = 0;
+        
+        let grossHematHanya = 0; // Khusus hitung persentase real-time hemat harian
+        
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
 
         if (modeTampilan === 'hari') {
@@ -251,7 +262,12 @@
 
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
-                totalPotongan += trip.potongan;
+                
+                if (trip.layanan === 'standard') {
+                    totalPotonganStandard += trip.potongan;
+                } else {
+                    grossHematHanya += trip.gross;
+                }
 
                 let lencanaLayanan = trip.layanan === 'standard' ? 
                     `<span class="badge bg-standard">Standard</span>` : 
@@ -267,110 +283,105 @@
                 </tr>`;
             });
 
-            let potonganManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
-            totalPotongan += potonganManualHariIni;
-            totalNet = totalGross - totalPotongan;
+            totalPotonganHemat = potonganHematManual[tanggalTerpilih] || 0;
+            let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
+            totalNet = totalGross - totalPotonganKombinasi;
 
-            // HITUNG PERSENTASE DINAMIS UNTUK RINGKASAN HARIAN
-            let persenTeks = "";
-            if (totalGross > 0 && totalPotongan > 0) {
-                let persen = (totalPotongan / totalGross) * 100;
-                persenTeks = ` (${persen.toFixed(2)}%)`;
-            }
-            document.getElementById('sumPotongan').innerText = `Rp ${Math.round(totalPotongan).toLocaleString('id-ID')}${persenTeks}`;
+            // Render komponen potongan teks di ringkasan harian
+            let persenStandardTeks = totalPotonganStandard > 0 ? " (8.00%)" : " (0%)";
+            let persenHematTeks = (grossHematHanya > 0 && totalPotonganHemat > 0) ? ` (${((totalPotonganHemat / grossHematHanya) * 100).toFixed(2)}%)` : " (0%)";
+            let persenTotalTeks = (totalGross > 0 && totalPotonganKombinasi > 0) ? ` (${((totalPotonganKombinasi / totalGross) * 100).toFixed(2)}%)` : "";
+
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}${persenStandardTeks}`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${persenHematTeks}`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')}${persenTotalTeks}`;
 
         } else {
             boxPotongan.style.display = "none"; 
 
             if (modeTampilan === 'minggu') {
-                header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
+                header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
                 document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
 
                 let kelompokMingguan = {};
                 masterData.forEach(item => {
                     let senin = getAwalMinggu(item.tanggal);
-                    if (!kelompokMingguan[senin]) kelompokMingguan[senin] = { order: 0, gross: 0, potongan: 0 };
+                    if (!kelompokMingguan[senin]) kelompokMingguan[senin] = { order: 0, gross: 0, potStd: 0, potHmt: 0 };
                     kelompokMingguan[senin].order += 1;
                     kelompokMingguan[senin].gross += item.gross;
-                    kelompokMingguan[senin].potongan += item.potongan;
+                    if(item.layanan === 'standard') kelompokMingguan[senin].potStd += item.potongan;
                 });
 
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let senin = getAwalMinggu(tgl);
                     if (kelompokMingguan[senin]) {
-                        kelompokMingguan[senin].potongan += potonganHematManual[tgl];
+                        kelompokMingguan[senin].potHmt += potonganHematManual[tgl];
                     }
                 });
 
                 Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
                     let k = kelompokMingguan[minggu];
-                    let netMinggu = k.gross - k.potongan;
-                    totalGross += k.gross; totalPotongan += k.potongan; totalNet += netMinggu; totalOrder += k.order;
+                    let totalPotRow = k.potStd + k.potHmt;
+                    let netMinggu = k.gross - totalPotRow;
                     
-                    let persenTeksMinggu = "";
-                    if (k.gross > 0 && k.potongan > 0) {
-                        persenTeksMinggu = ` (${((k.potongan / k.gross) * 100).toFixed(2)}%)`;
-                    }
-
+                    totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
+                    
                     tbody.innerHTML += `<tr>
                         <td>${minggu}</td>
                         <td>${k.order}</td>
                         <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Rp ${Math.round(k.potongan).toLocaleString('id-ID')}${persenTeksMinggu}</td>
+                        <td style="color: #c62828;">Std: Rp ${Math.round(k.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(k.potHmt).toLocaleString('id-ID')}</td>
                         <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netMinggu).toLocaleString('id-ID')}</td>
                     </tr>`;
                 });
 
             } else if (modeTampilan === 'bulan') {
-                header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
+                header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
                 document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
 
                 let kelompokBulanan = {};
                 masterData.forEach(item => {
                     let bulan = item.tanggal.substring(0, 7);
-                    if (!kelompokBulanan[bulan]) kelompokBulanan[bulan] = { order: 0, gross: 0, potongan: 0 };
+                    if (!kelompokBulanan[bulan]) kelompokBulanan[bulan] = { order: 0, gross: 0, potStd: 0, potHmt: 0 };
                     kelompokBulanan[bulan].order += 1;
                     kelompokBulanan[bulan].gross += item.gross;
-                    kelompokBulanan[bulan].potongan += item.potongan;
+                    if(item.layanan === 'standard') kelompokBulanan[bulan].potStd += item.potongan;
                 });
 
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let bulan = tgl.substring(0, 7);
                     if (kelompokBulanan[bulan]) {
-                        kelompokBulanan[bulan].potongan += potonganHematManual[tgl];
+                        kelompokBulanan[bulan].potHmt += potonganHematManual[tgl];
                     }
                 });
 
                 Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
                     let b = kelompokBulanan[bln];
-                    let netBulan = b.gross - b.potongan;
-                    totalGross += b.gross; totalPotongan += b.potongan; totalNet += netBulan; totalOrder += b.order;
+                    let totalPotRow = b.potStd + b.potHmt;
+                    let netBulan = b.gross - totalPotRow;
                     
-                    let persenTeksBulan = "";
-                    if (b.gross > 0 && b.potongan > 0) {
-                        persenTeksBulan = ` (${((b.potongan / b.gross) * 100).toFixed(2)}%)`;
-                    }
-
+                    totalGross += b.gross; totalPotonganStandard += b.potStd; totalPotonganHemat += b.potHmt; totalOrder += b.order;
+                    
                     tbody.innerHTML += `<tr>
                         <td>${bln}</td>
                         <td>${b.order}</td>
                         <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Rp ${Math.round(b.potongan).toLocaleString('id-ID')}${persenTeksBulan}</td>
+                        <td style="color: #c62828;">Std: Rp ${Math.round(b.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(b.potHmt).toLocaleString('id-ID')}</td>
                         <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netBulan).toLocaleString('id-ID')}</td>
                     </tr>`;
                 });
             }
 
-            // SET TEXT UNTUK RINGKASAN REKAP TOTAL DI BAWAH (MINGGU/BULAN)
-            let persenTeksTotal = "";
-            if (totalGross > 0 && totalPotongan > 0) {
-                persenTeksTotal = ` (${(totalPotongan / totalGross * 100).toFixed(2)}%)`;
-            }
-            document.getElementById('sumPotongan').innerText = `Rp ${Math.round(totalPotongan).toLocaleString('id-ID')}${persenTeksTotal}`;
+            let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
+            totalNet = totalGross - totalPotKombinasiSeluruh;
+
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotKombinasiSeluruh).toLocaleString('id-ID')}`;
         }
 
         document.getElementById('totalOrder').innerText = totalOrder;
-        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
+        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID Karthik')}`;
         document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
     }
 
