@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator & Pembukuan Trip Ojol</title>
+    <meta name="theme-color" content="#00b14f">
+    
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Kalkulator%20Trip%20Ojol%22%2C%22short_name%22%3A%22TripOjol%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f4f4f9%22%2C%22theme_color%22%3A%22%2300b14f%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%2720%25%27%20fill%3D%27%2300b14f%27%2F%3E%3Ccircle%20cx%3D%27256%27%20cy%3D%27256%27%20r%3D%27220%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%2735%27%2F%3E%3Cpath%20d%3D%27M180%20190h60v-60h20v60h60v20h-60v60h-20v-60h-60zm152%2040h60v20h-60zm-152%2090h60v20h-60zm0%2030h60v20h-60zm152-30h60v20h-60zm0%2030h60v20h-60z%27%20fill%3D%27white%27%2F%3E%3C%2Svg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+
+    <style>
+        body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2e7d32; margin-top: 5px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff; }
+        
+        .date-nav { display: flex; gap: 5px; align-items: center; }
+        .date-nav button { width: auto; flex: 1; padding: 10px; background-color: #0288d1; font-weight: bold; margin: 0; }
+        .date-nav input[type="date"] { flex: 3; }
+
+        button { width: 100%; padding: 10px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
+        button.download { background-color: #1565c0; }
+        button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; }
+        
+        .summary-box { margin-top: 15px; padding: 12px; background-color: #efebe9; border-radius: 5px; border-left: 5px solid #ff9800; }
+        .summary-box h3 { margin: 0 0 8px 0; font-size: 16px; color: #5d4037; border-bottom: 1px dashed #bcaaa4; padding-bottom: 4px; }
+        .summary-box p { margin: 4px 0; font-size: 14px; display: flex; justify-content: space-between; }
+        .bold { font-weight: bold; color: #333; }
+        .red-bold { font-weight: bold; color: #c62828; }
+        .green-bold { font-weight: bold; color: #2e7d32; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 6px 4px; text-align: center; }
+        th { background-color: #e8f5e9; }
+        #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; margin: 0; }
+        .tab-btn.active { background-color: #2e7d32; color: white; }
+        .badge { padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; }
+        .bg-hemat { background-color: #43a047; }
+        .bg-standard { background-color: #0288d1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Pembukuan Trip Ojol</h2>
+    <button id="installBtn">⬇️ INSTALL APLIKASI KALKULATOR</button>
+    
+    <div class="tabs">
+        <button class="tab-btn active" id="tabHari" onclick="gantiTampilan('hari')">Data Harian</button>
+        <button class="tab-btn" id="tabMinggu" onclick="gantiTampilan('minggu')">Rekap Mingguan</button>
+        <button class="tab-btn" id="tabBulan" onclick="gantiTampilan('bulan')">Rekap Bulanan</button>
+    </div>
+
+    <div class="form-group">
+        <label for="tanggalTrip">Pilih Tanggal Narik:</label>
+        <div class="date-nav">
+            <button onclick="navigasiTanggal(-1)">◀ Prev</button>
+            <input type="date" id="tanggalTrip">
+            <button onclick="navigasiTanggal(1)">Next ▶</button>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="jenisLayanan">Jenis Layanan:</label>
+        <select id="jenisLayanan" onchange="updateLabelInput()">
+            <option value="hemat">GrabBike Hemat (Potongan Esok Hari)</option>
+            <option value="standard">GrabBike Standard (Potongan 8% Langsung)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label id="labelArgo" for="argoInput">Masukkan Argo Kotor / Gross (Rp):</label>
+        <input type="number" id="argoInput" placeholder="Contoh: 10200" onkeypress="handleKeyPress(event)">
+    </div>
+    
+    <button onclick="tambahTrip()">Tambah Trip</button>
+    <button class="download" onclick="downloadCSV()">Download Semua Laporan (.CSV)</button>
+    <button style="background-color: #757575;" onclick="resetData()">Hapus Semua Data</button>
+
+    <div class="summary-box">
+        <h3 id="judulRingkasan">Ringkasan Hari Ini</h3>
+        <p>Total Orderan Sukses: <span id="totalOrder" class="bold">0</span></p>
+        <p>Total Gross (Pendapatan Kotor): <span id="sumGross" class="bold">Rp 0</span></p>
+        <p>Prediksi Potongan Komisi (Maks 8%): <span id="sumPotongan" class="red-bold">Rp 0</span></p>
+        <p>Estimasi Pendapatan Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
+    </div>
+
+    <table id="tabelTrip">
+        <thead>
+            <tr id="headerTabel">
+                <th>No</th>
+                <th>Layanan</th>
+                <th>Gross</th>
+                <th>Potongan</th>
+                <th>Net</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    let masterData = [];
+    let modeTampilan = 'hari'; 
+
+    document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
+
+    if (localStorage.getItem('masterDataOjol')) {
+        masterData = JSON.parse(localStorage.getItem('masterDataOjol'));
+    }
+
+    updateLabelInput();
+    prosesDanTampilkan();
+
+    function handleKeyPress(event) {
+        if (event.key === "Enter") tambahTrip();
+    }
+
+    function updateLabelInput() {
+        const layanan = document.getElementById('jenisLayanan').value;
+        const label = document.getElementById('labelArgo');
+        const input = document.getElementById('argoInput');
+        
+        if (layanan === 'standard') {
+            label.innerText = "Masukkan Pendapatan Bersih / Net (Rp):";
+            input.placeholder = "Contoh: 11200";
+        } else {
+            label.innerText = "Masukkan Argo Kotor / Gross (Rp):";
+            input.placeholder = "Contoh: 10200";
+        }
+    }
+
+    function navigasiTanggal(hari) {
+        const inputTanggal = document.getElementById('tanggalTrip');
+        let tanggalSemula = new Date(inputTanggal.value);
+        if (isNaN(tanggalSemula.getTime())) tanggalSemula = new Date();
+        
+        tanggalSemula.setDate(tanggalSemula.getDate() + hari);
+        inputTanggal.value = tanggalSemula.toISOString().slice(0,10);
+        
+        if(modeTampilan === 'hari') prosesDanTampilkan();
+    }
+
+    function tambahTrip() {
+        const inputTanggal = document.getElementById('tanggalTrip').value;
+        const inputArgo = document.getElementById('argoInput');
+        const layanan = document.getElementById('jenisLayanan').value;
+        const nilaiInput = parseInt(inputArgo.value);
+
+        if (!inputTanggal) return alert("Pilih tanggal terlebih dahulu!");
+        if (isNaN(nilaiInput) || nilaiInput <= 0) return alert("Masukkan nominal angka yang valid!");
+
+        let gross = 0, potongan = 0, net = 0;
+
+        if (layanan === 'standard') {
+            net = nilaiInput;
+            gross = Math.round(net * (100 / 92));
+            potongan = gross - net;
+        } else {
+            gross = nilaiInput;
+            potongan = gross * 0.08;
+            net = gross - potongan;
+        }
+
+        masterData.push({
+            id: Date.now() + Math.random(),
+            tanggal: inputTanggal,
+            layanan,
+            gross,
+            potongan,
+            net
+        });
+
+        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+        inputArgo.value = '';
+        inputArgo.focus();
+        gantiTampilan('hari');
+    }
+
+    function hapusBaris(idUnik) {
+        if (confirm("Hapus baris data trip ini?")) {
+            masterData = masterData.filter(item => item.id !== idUnik);
+            localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+            prosesDanTampilkan();
+        }
+    }
+
+    function gantiTampilan(mode) {
+        modeTampilan = mode;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        if(mode === 'hari') document.getElementById('tabHari').classList.add('active');
+        if(mode === 'minggu') document.getElementById('tabMinggu').classList.add('active');
+        if(mode === 'bulan') document.getElementById('tabBulan').classList.add('active');
+        prosesDanTampilkan();
+    }
+
+    function getAwalMinggu(d) {
+        let date = new Date(d);
+        let day = date.getDay();
+        let diff = date.getDate() - day + (day == 0 ? -6 : 1); 
+        return new Date(date.setDate(diff)).toISOString().slice(0,10);
+    }
+
+    function prosesDanTampilkan() {
+        const tbody = document.querySelector('#tabelTrip tbody');
+        const header = document.getElementById('headerTabel');
+        tbody.innerHTML = '';
+
+        let totalGross = 0, totalPotongan = 0, totalNet = 0, totalOrder = 0;
+        const tanggalTerpilih = document.getElementById('tanggalTrip').value;
+
+        if (modeTampilan === 'hari') {
+            header.innerHTML = `<th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
+            document.getElementById('judulRingkasan').innerText = `Ringkasan Riwayat: ${tanggalTerpilih}`;
+            
+            let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
+            totalOrder = dataHariIni.length;
+
+            dataHariIni.forEach((trip, index) => {
+                totalGross += trip.gross;
+                totalPotongan += trip.potongan;
+                totalNet += trip.net;
+
+                let lencanaLayanan = trip.layanan === 'standard' ? 
+                    `<span class="badge bg-standard">Standard</span>` : 
+                    `<span class="badge bg-hemat">Hemat</span>`;
+
+                tbody.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${lencanaLayanan}</td>
+                    <td>Rp ${Math.round(trip.gross).toLocaleString('id-ID')}</td>
+                    <td style="color: #c62828;">Rp ${Math.round(trip.potongan).toLocaleString('id-ID')}</td>
+                    <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(trip.net).toLocaleString('id-ID')}</td>
+                    <td><button class="btn-delete" onclick="hapusBaris(${trip.id})">X</button></td>
+                </tr>`;
+            });
+
+        } else if (modeTampilan === 'minggu') {
+            header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
+            document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
+
+            let kelompokMingguan = {};
+            masterData.forEach(item => {
+                let senin = getAwalMinggu(item.tanggal);
+                if (!kelompokMingguan[senin]) kelompokMingguan[senin] = { order: 0, gross: 0, potongan: 0, net: 0 };
+                kelompokMingguan[senin].order += 1;
+                kelompokMingguan[senin].gross += item.gross;
+                kelompokMingguan[senin].potongan += item.potongan;
+                kelompokMingguan[senin].net += item.net;
+                
+                totalGross += item.gross; totalPotongan += item.potongan; totalNet += item.net; totalOrder += 1;
+            });
+
+            Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
+                let k = kelompokMingguan[minggu];
+                tbody.innerHTML += `<tr>
+                    <td>${minggu}</td>
+                    <td>${k.order}</td>
+                    <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.round(k.potongan).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.round(k.net).toLocaleString('id-ID')}</td>
+                </tr>`;
+            });
+
+        } else if (modeTampilan === 'bulan') {
+            header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
+            document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
+
+            let kelompokBulanan = {};
+            masterData.forEach(item => {
+                let bulan = item.tanggal.substring(0, 7);
+                if (!kelompokBulanan[bulan]) kelompokBulanan[bulan] = { order: 0, gross: 0, potongan: 0, net: 0 };
+                kelompokBulanan[bulan].order += 1;
+                kelompokBulanan[bulan].gross += item.gross;
+                kelompokBulanan[bulan].potongan += item.potongan;
+                kelompokBulanan[bulan].net += item.net;
+
+                totalGross += item.gross; totalPotongan += item.potongan; totalNet += item.net; totalOrder += 1;
+            });
+
+            Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
+                let b = kelompokBulanan[bln];
+                tbody.innerHTML += `<tr>
+                    <td>${bln}</td>
+                    <td>${b.order}</td>
+                    <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.round(b.potongan).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.round(b.net).toLocaleString('id-ID')}</td>
+                </tr>`;
+            });
+        }
+
+        document.getElementById('totalOrder').innerText = totalOrder;
+        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
+        document.getElementById('sumPotongan').innerText = `Rp ${Math.round(totalPotongan).toLocaleString('id-ID')}`;
+        document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
+    }
+
+    document.getElementById('tanggalTrip').addEventListener('change', () => {
+        if(modeTampilan === 'hari') prosesDanTampilkan();
+    });
+
+    function downloadCSV() {
+        if (masterData.length === 0) return alert("Belum ada data untuk diekspor!");
+        let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jenis Layanan,Argo Kotor (Gross),Potongan,Net (Bersih)\n";
+        
+        masterData.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(t => {
+            csvContent += `${t.tanggal},${t.layanan.toUpperCase()},${Math.round(t.gross)},${Math.round(t.potongan)},${Math.round(t.net)}\n`;
+        });
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Laporan_Besar_Trip_Ojol.csv`);
+        link.click();
+    }
+
+    function resetData() {
+        if (confirm("🚨 PERINGATAN: Semua riwayat lintas tanggal yang tersimpan di HP akan dihapus permanen!")) {
+            masterData = [];
+            localStorage.removeItem('masterDataOjol');
+            prosesDanTampilkan();
+        }
+    }
+
+    // REGISTRASI SERVICE WORKER RESMI
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            const CACHE_NAME = 'ojol-calc-v4';
+            self.addEventListener('install', e => self.skipWaiting());
+            self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            self.addEventListener('fetch', e => {
+                e.respondWith(fetch(e.request).catch(() => new Response("Offline Mode active.")));
+            });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob))
+            .then(() => console.log('Sistem PWA Berhasil Diaktifkan'))
+            .catch(err => console.log('Gagal:', err));
+    }
+
+    // Menangkap Trigger Tombol Install Asli Android
+    let pemicuInstalasi;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        pemicuInstalasi = e;
+        document.getElementById('installBtn').style.display = 'block';
+    });
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+        if (pemicuInstalasi) {
+            pemicuInstalasi.prompt();
+            const { outcome } = await pemicuInstalasi.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('installBtn').style.display = 'none';
+            }
+            pemicuInstalasi = null;
+        }
+    });
+</script>
+</body>
+</html>
