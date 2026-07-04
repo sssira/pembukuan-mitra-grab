@@ -24,6 +24,11 @@
         button.download { background-color: #1565c0; }
         button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; color: white; border: none;}
         
+        /* Gaya baru untuk area Backup/Restore */
+        .backup-zone { display: flex; gap: 8px; margin-bottom: 12px; }
+        .btn-backup { background-color: #00796b; font-size: 14px; margin-bottom: 0; }
+        .btn-restore { background-color: #7b1fa2; font-size: 14px; margin-bottom: 0; }
+
         .summary-box { margin-top: 15px; padding: 12px; background-color: #efebe9; border-radius: 5px; border-left: 5px solid #ff9800; }
         .summary-box h3 { margin: 0 0 8px 0; font-size: 16px; color: #5d4037; border-bottom: 1px dashed #bcaaa4; padding-bottom: 4px; }
         .summary-box p { margin: 6px 0; font-size: 14px; display: flex; justify-content: space-between; }
@@ -60,6 +65,12 @@
         <button class="tab-btn" id="tabBulan" onclick="gantiTampilan('bulan')">Rekap Bulanan</button>
     </div>
 
+    <div class="backup-zone">
+        <button class="btn-backup" onclick="exportDataKeJSON()">📤 BACKUP DATA</button>
+        <button class="btn-restore" onclick="pemicuPilihFileJSON()">📥 RESTORE DATA</button>
+        <input type="file" id="fileJSONInput" accept=".json" style="display: none;" onchange="importDataDariJSON(event)">
+    </div>
+
     <div class="form-group">
         <label for="tanggalTrip">Pilih Tanggal Narik:</label>
         <div class="date-nav">
@@ -83,7 +94,7 @@
     </div>
     
     <button onclick="tambahTrip()">Tambah Trip</button>
-    <button class="download" onclick="downloadCSV()">Download Semua Laporan (.CSV)</button>
+    <button class="download" onclick="downloadCSV()">Download Excel Laporan (.CSV)</button>
     <button style="background-color: #757575;" onclick="resetData()">Hapus Semua Data</button>
 
     <div class="summary-box">
@@ -190,7 +201,7 @@
 
         if (layanan === 'standard') {
             net = nilaiInput;
-            gross = Math.round(net * (100 / 92)); // Kebalikan dari potongan langsung 8%
+            gross = Math.round(net * (100 / 92)); 
             potongan = gross - net;
         } else {
             gross = nilaiInput;
@@ -245,8 +256,7 @@
 
         let totalGross = 0, totalNet = 0, totalOrder = 0;
         let totalPotonganStandard = 0, totalPotonganHemat = 0;
-        
-        let grossHematHanya = 0; // Khusus hitung persentase real-time hemat harian
+        let grossHematHanya = 0; 
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
 
@@ -262,7 +272,6 @@
 
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
-                
                 if (trip.layanan === 'standard') {
                     totalPotonganStandard += trip.potongan;
                 } else {
@@ -287,7 +296,6 @@
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
-            // Render komponen potongan teks di ringkasan harian
             let persenStandardTeks = totalPotonganStandard > 0 ? " (8.00%)" : " (0%)";
             let persenHematTeks = (grossHematHanya > 0 && totalPotonganHemat > 0) ? ` (${((totalPotonganHemat / grossHematHanya) * 100).toFixed(2)}%)` : " (0%)";
             let persenTotalTeks = (totalGross > 0 && totalPotonganKombinasi > 0) ? ` (${((totalPotonganKombinasi / totalGross) * 100).toFixed(2)}%)` : "";
@@ -314,16 +322,13 @@
 
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let senin = getAwalMinggu(tgl);
-                    if (kelompokMingguan[senin]) {
-                        kelompokMingguan[senin].potHmt += potonganHematManual[tgl];
-                    }
+                    if (kelompokMingguan[senin]) kelompokMingguan[senin].potHmt += potonganHematManual[tgl];
                 });
 
                 Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
-                    let k = kelompokMingguan[minggu];
+                    let k = kelompokMingguan[week = minggu];
                     let totalPotRow = k.potStd + k.potHmt;
                     let netMinggu = k.gross - totalPotRow;
-                    
                     totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
                     
                     tbody.innerHTML += `<tr>
@@ -350,16 +355,13 @@
 
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let bulan = tgl.substring(0, 7);
-                    if (kelompokBulanan[bulan]) {
-                        kelompokBulanan[bulan].potHmt += potonganHematManual[tgl];
-                    }
+                    if (kelompokBulanan[bulan]) kelompokBulanan[bulan].potHmt += potonganHematManual[tgl];
                 });
 
                 Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
                     let b = kelompokBulanan[bln];
                     let totalPotRow = b.potStd + b.potHmt;
                     let netBulan = b.gross - totalPotRow;
-                    
                     totalGross += b.gross; totalPotonganStandard += b.potStd; totalPotonganHemat += b.potHmt; totalOrder += b.order;
                     
                     tbody.innerHTML += `<tr>
@@ -381,22 +383,77 @@
         }
 
         document.getElementById('totalOrder').innerText = totalOrder;
-        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID Karthik')}`;
+        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
         document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
     }
 
-    document.getElementById('tanggalTrip').addEventListener('change', () => {
-        prosesDanTampilkan();
-    });
+    document.getElementById('tanggalTrip').addEventListener('change', () => { prosesDanTampilkan(); });
+
+    // 📥 FUNGSI BARU: EKSPOR DATA KE FILE JSON (BACKUP)
+    function exportDataKeJSON() {
+        if (masterData.length === 0 && Object.keys(potonganHematManual).length === 0) {
+            return alert("Belum ada data apa pun untuk di-backup!");
+        }
+        
+        const paketBackup = {
+            riwayatTrip: masterData,
+            potonganManual: potonganHematManual,
+            waktuBackup: new Date().toISOString()
+        };
+
+        const stringifyData = JSON.stringify(paketBackup, null, 2);
+        const blob = new Blob([stringifyData], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `BACKUP_PEMBUKUAN_OJOL_${new Date().toISOString().slice(0,10)}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // 📤 FUNGSI BARU: RESTORE DATA DARI FILE JSON
+    function pemicuPilihFileJSON() {
+        document.getElementById('fileJSONInput').click();
+    }
+
+    function importDataDariJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const dataImpor = JSON.parse(e.target.result);
+                
+                if (dataImpor.riwayatTrip && dataImpor.potonganManual) {
+                    if (confirm("Apakah Anda yakin ingin memulihkan data ini? Data yang ada di aplikasi saat ini akan digantikan sepenuhnya.")) {
+                        masterData = dataImpor.riwayatTrip;
+                        potonganHematManual = dataImpor.potonganManual;
+
+                        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+                        localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+
+                        prosesDanTampilkan();
+                        alert("🎉 Pemulihan data berhasil! Seluruh data tarikan Anda telah kembali.");
+                    }
+                } else {
+                    alert("Format file salah! Pastikan itu file backup murni dari aplikasi ini.");
+                }
+            } catch (error) {
+                alert("Gagal membaca file JSON. File rusak atau corrupt.");
+            }
+            event.target.value = ''; // Reset input file
+        };
+        reader.readAsText(file);
+    }
 
     function downloadCSV() {
         if (masterData.length === 0) return alert("Belum ada data untuk diekspor!");
         let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jenis Layanan,Argo Kotor (Gross),Potongan Langsung,Net (Bersih)\n";
-        
         masterData.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(t => {
             csvContent += `${t.tanggal},${t.layanan.toUpperCase()},${Math.round(t.gross)},${Math.round(t.potongan)},${Math.round(t.net)}\n`;
         });
-        
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
@@ -416,8 +473,7 @@
 
     let pemicuInstalasi;
     window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        pemicuInstalasi = e;
+        e.preventDefault(); pemicuInstalasi = e;
         document.getElementById('installBtn').style.display = 'block';
     });
 
@@ -425,9 +481,7 @@
         if (pemicuInstalasi) {
             pemicuInstalasi.prompt();
             const { outcome } = await pemicuInstalasi.userChoice;
-            if (outcome === 'accepted') {
-                document.getElementById('installBtn').style.display = 'none';
-            }
+            if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
             pemicuInstalasi = null;
         }
     });
@@ -435,11 +489,8 @@
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
-                .then((reg) => {
-                    console.log('Service Worker Utama Berhasil Aktif!', reg);
-                    reg.update(); 
-                })
-                .catch((err) => console.log('Gagal mendaftarkan Service Worker:', err));
+                .then((reg) => { reg.update(); })
+                .catch((err) => console.log('Gagal mendaftarkan SW:', err));
         });
     }
 </script>
