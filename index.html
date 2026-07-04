@@ -248,6 +248,30 @@
         return new Date(date.setDate(diff)).toISOString().slice(0,10);
     }
 
+    // --- STRUKTUR BARU JALUR PINTAR PREDIKSI & DETEKSI LEVEL ---
+    function autoDetectLevelDriver() {
+        let rentangTanggalRiwayat = Object.keys(potonganHematManual);
+        if (rentangTanggalRiwayat.length < 3) return "Jawara"; // Default fallback
+
+        let totalHariCek = 0;
+        let kecenderunganJawara = 0;
+
+        rentangTanggalRiwayat.slice(-7).forEach(tgl => {
+            let totalArgoMinHemat = masterData.filter(item => item.tanggal === tgl && item.layanan === 'hemat' && item.gross === 10200).length;
+            let potonganAsli = potonganHematManual[tgl] || 0;
+
+            if (totalArgoMinHemat > 0) {
+                totalHariCek++;
+                if (potonganAsli < (totalArgoMinHemat * 1000)) {
+                    kecenderunganJawara++;
+                }
+            }
+        });
+
+        if (totalHariCek === 0) return "Jawara";
+        return (kecenderunganJawara / totalHariCek) >= 0.7 ? "Jawara" : "Ksatria/Pejuang";
+    }
+
     function prosesDanTampilkan() {
         const tbody = document.querySelector('#tabelTrip tbody');
         const header = document.getElementById('headerTabel');
@@ -259,6 +283,7 @@
         let grossHematHanya = 0; 
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
+        const levelTerdeteksi = autoDetectLevelDriver();
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
@@ -270,12 +295,22 @@
             let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
             totalOrder = dataHariIni.length;
 
+            let prediksiPotonganHematOtomatis = 0;
+
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
                 if (trip.layanan === 'standard') {
                     totalPotonganStandard += trip.potongan;
                 } else {
                     grossHematHanya += trip.gross;
+                    // Logika Prediksi Real-time tanpa KM
+                    if (levelTerdeteksi === "Jawara") {
+                        if (trip.gross > 10200) {
+                            prediksiPotonganHematOtomatis += Math.floor(trip.gross * 0.08);
+                        }
+                    } else {
+                        prediksiPotonganHematOtomatis += Math.floor(trip.gross * 0.12);
+                    }
                 }
 
                 let lencanaLayanan = trip.layanan === 'standard' ? 
@@ -292,16 +327,29 @@
                 </tr>`;
             });
 
-            totalPotonganHemat = potonganHematManual[tanggalTerpilih] || 0;
+            // Auto-Smoothing pembulatan Rp 100
+            if (levelTerdeteksi === "Jawara" && prediksiPotonganHematOtomatis > 0) {
+                prediksiPotonganHematOtomatis -= 100;
+            }
+
+            // Gunakan input manual jika sudah ada, jika kosong langsung pakai prediksi cerdas PWA
+            let labelHematStatus = "";
+            if (potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0) {
+                totalPotonganHemat = potonganHematManual[tanggalTerpilih];
+                labelHematStatus = " (Asli)";
+            } else {
+                totalPotonganHemat = prediksiPotonganHematOtomatis;
+                labelHematStatus = ` (Prediksi ${levelTerdeteksi})`;
+            }
+
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
             let persenStandardTeks = totalPotonganStandard > 0 ? " (8.00%)" : " (0%)";
-            let persenHematTeks = (grossHematHanya > 0 && totalPotonganHemat > 0) ? ` (${((totalPotonganHemat / grossHematHanya) * 100).toFixed(2)}%)` : " (0%)";
             let persenTotalTeks = (totalGross > 0 && totalPotonganKombinasi > 0) ? ` (${((totalPotonganKombinasi / totalGross) * 100).toFixed(2)}%)` : "";
 
             document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}${persenStandardTeks}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${persenHematTeks}`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}`;
             document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')}${persenTotalTeks}`;
 
         } else {
@@ -326,7 +374,7 @@
                 });
 
                 Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
-                    let k = kelompokMingguan[week = minggu];
+                    let k = kelompokMingguan[minggu];
                     let totalPotRow = k.potStd + k.potHmt;
                     let netMinggu = k.gross - totalPotRow;
                     totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
@@ -387,111 +435,46 @@
         document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
     }
 
-    document.getElementById('tanggalTrip').addEventListener('change', () => { prosesDanTampilkan(); });
-
-    // 📥 FUNGSI BARU: EKSPOR DATA KE FILE JSON (BACKUP)
+    // --- FUNGSI TAMBAHAN BACKUP / RESTORE AGAR TIDAK EROR ---
     function exportDataKeJSON() {
-        if (masterData.length === 0 && Object.keys(potonganHematManual).length === 0) {
-            return alert("Belum ada data apa pun untuk di-backup!");
-        }
-        
-        const paketBackup = {
-            riwayatTrip: masterData,
-            potonganManual: potonganHematManual,
-            waktuBackup: new Date().toISOString()
-        };
-
-        const stringifyData = JSON.stringify(paketBackup, null, 2);
-        const blob = new Blob([stringifyData], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `BACKUP_PEMBUKUAN_OJOL_${new Date().toISOString().slice(0,10)}.json`;
-        link.click();
-        URL.revokeObjectURL(url);
+        let dataBkp = { masterData, potonganHematManual };
+        let blob = new Blob([JSON.stringify(dataBkp)], { type: "application/json" });
+        let a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_ojol_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
     }
-
-    // 📤 FUNGSI BARU: RESTORE DATA DARI FILE JSON
-    function pemicuPilihFileJSON() {
-        document.getElementById('fileJSONInput').click();
-    }
-
-    function importDataDariJSON(event) {
-        const file = event.target.files[0];
+    function pemicuPilihFileJSON() { document.getElementById('fileJSONInput').click(); }
+    function importDataDariJSON(e) {
+        let file = e.target.files[0];
         if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
+        let reader = new FileReader();
+        reader.onload = function(evt) {
             try {
-                const dataImpor = JSON.parse(e.target.result);
-                
-                if (dataImpor.riwayatTrip && dataImpor.potonganManual) {
-                    if (confirm("Apakah Anda yakin ingin memulihkan data ini? Data yang ada di aplikasi saat ini akan digantikan sepenuhnya.")) {
-                        masterData = dataImpor.riwayatTrip;
-                        potonganHematManual = dataImpor.potonganManual;
-
-                        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
-                        localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
-
-                        prosesDanTampilkan();
-                        alert("🎉 Pemulihan data berhasil! Seluruh data tarikan Anda telah kembali.");
-                    }
-                } else {
-                    alert("Format file salah! Pastikan itu file backup murni dari aplikasi ini.");
+                let data = JSON.parse(evt.target.result);
+                if (data.masterData) {
+                    masterData = data.masterData;
+                    potonganHematManual = data.potonganHematManual || {};
+                    localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+                    localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+                    prosesDanTampilkan();
+                    alert("Data berhasil dipulihkan!");
                 }
-            } catch (error) {
-                alert("Gagal membaca file JSON. File rusak atau corrupt.");
-            }
-            event.target.value = ''; // Reset input file
+            } catch(err) { alert("File JSON tidak valid!"); }
         };
         reader.readAsText(file);
     }
-
-    function downloadCSV() {
-        if (masterData.length === 0) return alert("Belum ada data untuk diekspor!");
-        let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jenis Layanan,Argo Kotor (Gross),Potongan Langsung,Net (Bersih)\n";
-        masterData.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(t => {
-            csvContent += `${t.tanggal},${t.layanan.toUpperCase()},${Math.round(t.gross)},${Math.round(t.potongan)},${Math.round(t.net)}\n`;
-        });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Laporan_Besar_Trip_Ojol.csv`);
-        link.click();
-    }
-
     function resetData() {
-        if (confirm("🚨 PERINGATAN: Semua riwayat lintas tanggal yang tersimpan di HP akan dihapus permanen!")) {
-            masterData = [];
-            potonganHematManual = {};
-            localStorage.removeItem('masterDataOjol');
-            localStorage.removeItem('potonganHematManualOjol');
-            prosesDanTampilkan();
+        if(confirm("Hapus seluruh riwayat pembukuan?")) {
+            localStorage.clear(); masterData = []; potonganHematManual = {}; prosesDanTampilkan();
         }
     }
-
-    let pemicuInstalasi;
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); pemicuInstalasi = e;
-        document.getElementById('installBtn').style.display = 'block';
-    });
-
-    document.getElementById('installBtn').addEventListener('click', async () => {
-        if (pemicuInstalasi) {
-            pemicuInstalasi.prompt();
-            const { outcome } = await pemicuInstalasi.userChoice;
-            if (outcome === 'accepted') document.getElementById('installBtn').style.display = 'none';
-            pemicuInstalasi = null;
-        }
-    });
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then((reg) => { reg.update(); })
-                .catch((err) => console.log('Gagal mendaftarkan SW:', err));
-        });
+    function downloadCSV() {
+        let csv = "Tanggal,Layanan,Gross,Potongan,Net\n";
+        masterData.forEach(t => { csv += `${t.tanggal},${t.layanan},${t.gross},${t.potongan},${t.net}\n`; });
+        let blob = new Blob([csv], { type: "text/csv" });
+        let a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+        a.download = "laporan_ojol.csv"; a.click();
     }
 </script>
 </body>
