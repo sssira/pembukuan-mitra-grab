@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembukuan Trip Ojol</title>
     <meta name="theme-color" content="#00b14f">
-    
-    <link rel="manifest" href="manifest.json">
-
     <style>
         body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f4f9; color: #333; }
         .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
@@ -15,35 +12,26 @@
         .form-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
         input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff; }
-        
         .date-nav { display: flex; gap: 5px; align-items: center; }
         .date-nav button { width: auto; flex: 1; padding: 10px; background-color: #0288d1; font-weight: bold; margin: 0; color: white; border: none; border-radius: 5px;}
         .date-nav input[type="date"] { flex: 3; }
-
         button { width: 100%; padding: 10px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
         button.download { background-color: #1565c0; }
         button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; color: white; border: none;}
-        
         .backup-zone { display: flex; gap: 8px; margin-bottom: 12px; }
         .btn-backup { background-color: #00796b; font-size: 14px; margin-bottom: 0; }
         .btn-restore { background-color: #7b1fa2; font-size: 14px; margin-bottom: 0; }
-
         .summary-box { margin-top: 15px; padding: 12px; background-color: #efebe9; border-radius: 5px; border-left: 5px solid #ff9800; }
         .summary-box h3 { margin: 0 0 8px 0; font-size: 16px; color: #5d4037; border-bottom: 1px dashed #bcaaa4; padding-bottom: 4px; }
         .summary-box p { margin: 6px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .bold { font-weight: bold; color: #333; }
         .red-bold { font-weight: bold; color: #c62828; }
         .green-bold { font-weight: bold; color: #2e7d32; }
-        
         .potongan-section { border-top: 1px solid #d7ccc8; margin-top: 6px; padding-top: 6px; }
         .potongan-hemat-box { background-color: #fff3e0; padding: 10px; border: 1px solid #ffe0b2; border-radius: 5px; margin-top: 8px; }
-        .potongan-hemat-box label { color: #e65100; font-size: 13px; }
-        .potongan-hemat-box input { padding: 6px; font-size: 14px; margin-top: 4px; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 6px 4px; text-align: center; }
         th { background-color: #e8f5e9; }
-        #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; width: 100%; }
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;}
         .tab-btn.active { background-color: #2e7d32; color: white; }
@@ -56,22 +44,15 @@
 
 <div class="container">
     <h2>Pembukuan Trip Ojol</h2>
-    <button id="installBtn">⬇️ INSTALL APLIKASI KE LAYAR HP</button>
     
     <div class="tabs">
-        <button class="tab-btn active" id="tabHari" onclick="gantiTampilan('hari')">Data Harian</button>
-        <button class="tab-btn" id="tabMinggu" onclick="gantiTampilan('minggu')">Rekap Mingguan</button>
-        <button class="tab-btn" id="tabBulan" onclick="gantiTampilan('bulan')">Rekap Bulanan</button>
-    </div>
-
-    <div class="backup-zone">
-        <button class="btn-backup" onclick="exportDataKeJSON()">📤 BACKUP DATA</button>
-        <button class="btn-restore" onclick="pemicuPilihFileJSON()">📥 RESTORE DATA</button>
-        <input type="file" id="fileJSONInput" accept=".json" style="display: none;" onchange="importDataDariJSON(event)">
+        <button class="tab-btn active" id="tabHari" onclick="gantiTampilan('hari')">Harian</button>
+        <button class="tab-btn" id="tabMinggu" onclick="gantiTampilan('minggu')">Mingguan</button>
+        <button class="tab-btn" id="tabBulan" onclick="gantiTampilan('bulan')">Bulanan</button>
     </div>
 
     <div class="form-group">
-        <label for="tanggalTrip">Pilih Tanggal Narik:</label>
+        <label for="tanggalTrip">Pilih Tanggal:</label>
         <div class="date-nav">
             <button onclick="navigasiTanggal(-1)">◀ Prev</button>
             <input type="date" id="tanggalTrip">
@@ -80,404 +61,113 @@
     </div>
 
     <div class="form-group">
-        <label for="jenisLayanan">Jenis Layanan:</label>
+        <label for="jenisLayanan">Layanan:</label>
         <select id="jenisLayanan" onchange="updateLabelInput()">
-            <option value="hemat">GrabBike Hemat (Potongan Esok Hari)</option>
-            <option value="standard">GrabBike Standard (Potongan 8% Langsung)</option>
+            <option value="hemat">GrabBike Hemat</option>
+            <option value="standard">GrabBike Standard</option>
         </select>
     </div>
 
     <div class="form-group">
-        <label id="labelArgo" for="argoInput">Masukkan Argo Kotor / Gross (Rp):</label>
-        <input type="number" id="argoInput" placeholder="Contoh: 10200" onkeypress="handleKeyPress(event)">
+        <label id="labelArgo" for="argoInput">Masukkan Gross (Rp):</label>
+        <input type="number" id="argoInput" placeholder="Contoh: 10200">
     </div>
     
     <button onclick="tambahTrip()">Tambah Trip</button>
-    <button class="download" onclick="downloadCSV()">Download Excel Laporan (.CSV)</button>
-    <button style="background-color: #757575;" onclick="resetData()">Hapus Semua Data</button>
 
     <div class="summary-box">
-        <h3 id="judulRingkasan">Ringkasan Hari Ini</h3>
-        <p>Total Orderan Sukses: <span id="totalOrder" class="bold">0</span></p>
-        <p>Total Gross (Pendapatan Kotor): <span id="sumGross" class="bold">Rp 0</span></p>
-        
-        <div class="potongan-section">
-            <p>Potongan Langsung Standard (8%): <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
-            <p>Potongan Esok Hari Hemat: <span id="sumPotonganHemat" class="red-bold">Rp 0</span></p>
-            <p style="border-top: 1px dashed #bcaaa4; padding-top: 4px; font-weight: bold;">Total Komisi (Kombinasi): <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
-        </div>
-
-        <p style="margin-top: 10px; border-top: 1px solid #d7ccc8; padding-top: 6px;">Estimasi Pendapatan Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
+        <h3 id="judulRingkasan">Ringkasan</h3>
+        <p>Total Gross: <span id="sumGross" class="bold">Rp 0</span></p>
+        <p>Potongan Std (8%): <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
+        <p>Potongan Hemat: <span id="sumPotonganHemat" class="red-bold">Rp 0</span></p>
+        <p>Total Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
 
         <div class="potongan-hemat-box" id="boxPotonganAsliHemat">
-            <label for="potonganAsliInput"><b>Potongan Asli GB Hemat Esok Hari (Rp):</b><br><small>*Masukkan nominal transaksi 'Deduction' dari aplikasi GrabDriver</small></label>
-            <input type="number" id="potonganAsliInput" placeholder="Contoh dari riwayat: 3100" oninput="simpanPotonganManual()">
+            <label for="potonganAsliInput">Potongan Asli Hemat (Deduction):</label>
+            <input type="number" id="potonganAsliInput" oninput="simpanPotonganManual()">
         </div>
     </div>
 
     <table id="tabelTrip">
-        <thead>
-            <tr id="headerTabel">
-                <th>No</th>
-                <th>Layanan</th>
-                <th>Gross</th>
-                <th>Potongan</th>
-                <th>Net</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
+        <thead><tr id="headerTabel"><th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th></tr></thead>
         <tbody></tbody>
     </table>
 </div>
 
 <script>
-    let masterData = [];
-    let potonganHematManual = {}; 
-    let modeTampilan = 'hari'; 
+    let masterData = JSON.parse(localStorage.getItem('masterDataOjol')) || [];
+    let potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol')) || {};
+    let modeTampilan = 'hari';
 
     document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
-
-    if (localStorage.getItem('masterDataOjol')) {
-        masterData = JSON.parse(localStorage.getItem('masterDataOjol'));
-    }
-    if (localStorage.getItem('potonganHematManualOjol')) {
-        potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol'));
-    }
-
-    updateLabelInput();
     prosesDanTampilkan();
-
-    function handleKeyPress(event) {
-        if (event.key === "Enter") tambahTrip();
-    }
 
     function updateLabelInput() {
         const layanan = document.getElementById('jenisLayanan').value;
-        const label = document.getElementById('labelArgo');
-        const input = document.getElementById('argoInput');
-        
-        if (layanan === 'standard') {
-            label.innerText = "Masukkan Pendapatan Bersih / Net (Rp):";
-            input.placeholder = "Contoh: 11200";
-        } else {
-            label.innerText = "Masukkan Argo Kotor / Gross (Rp):";
-            input.placeholder = "Contoh: 10200";
-        }
-    }
-
-    function navigasiTanggal(hari) {
-        const inputTanggal = document.getElementById('tanggalTrip');
-        let tanggalSemula = new Date(inputTanggal.value);
-        if (isNaN(tanggalSemula.getTime())) tanggalSemula = new Date();
-        
-        tanggalSemula.setDate(tanggalSemula.getDate() + hari);
-        inputTanggal.value = tanggalSemula.toISOString().slice(0,10);
-        
-        if(modeTampilan === 'hari') prosesDanTampilkan();
-    }
-
-    function simpanPotonganManual() {
-        const tanggalTerpilih = document.getElementById('tanggalTrip').value;
-        const val = parseInt(document.getElementById('potonganAsliInput').value) || 0;
-        
-        if(val >= 0) {
-            potonganHematManual[tanggalTerpilih] = val;
-            localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
-            prosesDanTampilkan();
-        }
+        document.getElementById('labelArgo').innerText = layanan === 'standard' ? "Masukkan Net (Rp):" : "Masukkan Gross (Rp):";
     }
 
     function tambahTrip() {
-        const inputTanggal = document.getElementById('tanggalTrip').value;
-        const inputArgo = document.getElementById('argoInput');
+        const tanggal = document.getElementById('tanggalTrip').value;
+        const argo = parseInt(document.getElementById('argoInput').value);
         const layanan = document.getElementById('jenisLayanan').value;
-        const nilaiInput = parseInt(inputArgo.value);
+        if (!argo) return;
 
-        if (!inputTanggal) return alert("Pilih tanggal terlebih dahulu!");
-        if (isNaN(nilaiInput) || nilaiInput <= 0) return alert("Masukkan nominal angka yang valid!");
-
-        let gross = 0, potongan = 0, net = 0;
-
-        if (layanan === 'standard') {
-            net = nilaiInput;
-            gross = Math.round(net * (100 / 92)); 
-            potongan = gross - net;
-        } else {
-            gross = nilaiInput;
-            potongan = 0; 
-            net = gross;
-        }
-
-        masterData.push({
-            id: Date.now() + Math.random(),
-            tanggal: inputTanggal,
-            layanan,
-            gross,
-            potongan,
-            net
-        });
-
+        let gross = (layanan === 'standard') ? Math.round(argo * (100/92)) : argo;
+        let potongan = (layanan === 'standard') ? (gross - argo) : 0;
+        masterData.push({ id: Date.now(), tanggal, layanan, gross, potongan, net: gross - potongan });
         localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
-        inputArgo.value = '';
-        inputArgo.focus();
-        gantiTampilan('hari');
-    }
-
-    function hapusBaris(idUnik) {
-        if (confirm("Hapus baris data trip ini?")) {
-            masterData = masterData.filter(item => item.id !== idUnik);
-            localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
-            prosesDanTampilkan();
-        }
-    }
-
-    function gantiTampilan(mode) {
-        modeTampilan = mode;
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        if(mode === 'hari') document.getElementById('tabHari').classList.add('active');
-        if(mode === 'minggu') document.getElementById('tabMinggu').classList.add('active');
-        if(mode === 'bulan') document.getElementById('tabBulan').classList.add('active');
+        document.getElementById('argoInput').value = '';
         prosesDanTampilkan();
     }
 
-    function getAwalMinggu(d) {
-        let date = new Date(d);
-        let day = date.getDay();
-        let diff = date.getDate() - day + (day == 0 ? -6 : 1); 
-        return new Date(date.setDate(diff)).toISOString().slice(0,10);
-    }
-
-    function autoDetectLevelDriver() {
-        let rentangTanggalRiwayat = Object.keys(potonganHematManual);
-        if (rentangTanggalRiwayat.length < 3) return "Jawara"; 
-
-        let totalHariCek = 0;
-        let kecenderunganJawara = 0;
-
-        rentangTanggalRiwayat.slice(-7).forEach(tgl => {
-            let totalArgoMinHemat = masterData.filter(item => item.tanggal === tgl && item.layanan === 'hemat' && item.gross === 10200).length;
-            let potonganAsli = potonganHematManual[tgl] || 0;
-
-            if (totalArgoMinHemat > 0) {
-                totalHariCek++;
-                if (potonganAsli < (totalArgoMinHemat * 1000)) {
-                    kecenderunganJawara++;
-                }
-            }
-        });
-
-        if (totalHariCek === 0) return "Jawara";
-        return (kecenderunganJawara / totalHariCek) >= 0.7 ? "Jawara" : "Ksatria/Pejuang";
+    function simpanPotonganManual() {
+        const tgl = document.getElementById('tanggalTrip').value;
+        potonganHematManual[tgl] = parseInt(document.getElementById('potonganAsliInput').value) || 0;
+        localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+        prosesDanTampilkan();
     }
 
     function prosesDanTampilkan() {
+        const tgl = document.getElementById('tanggalTrip').value;
         const tbody = document.querySelector('#tabelTrip tbody');
-        const header = document.getElementById('headerTabel');
-        const boxPotongan = document.getElementById('boxPotonganAsliHemat');
         tbody.innerHTML = '';
+        let totalGross = 0, totalPotStd = 0, totalPotHmt = 0;
 
-        let totalGross = 0, totalNet = 0, totalOrder = 0;
-        let totalPotonganStandard = 0, totalPotonganHemat = 0;
+        let data = masterData.filter(i => i.tanggal === tgl);
         
-        const tanggalTerpilih = document.getElementById('tanggalTrip').value;
-        const levelTerdeteksi = autoDetectLevelDriver();
+        // Logika Batas Maksimal 8% untuk Hemat
+        let grossHmt = 0;
+        data.forEach(t => {
+            if(t.layanan === 'hemat') grossHmt += t.gross;
+            totalGross += t.gross;
+            totalPotStd += t.potongan;
+        });
 
-        if (modeTampilan === 'hari') {
-            boxPotongan.style.display = "block";
-            document.getElementById('potonganAsliInput').value = potonganHematManual[tanggalTerpilih] || '';
+        totalPotHmt = potonganHematManual[tgl] !== undefined ? potonganHematManual[tgl] : Math.floor(grossHmt * 0.08);
 
-            header.innerHTML = `<th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
-            document.getElementById('judulRingkasan').innerText = `Ringkasan Riwayat: ${tanggalTerpilih}`;
-            
-            let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
-            totalOrder = dataHariIni.length;
+        data.forEach((t, i) => {
+            let p = t.layanan === 'standard' ? t.potongan : (t.gross * 0.08); // Prediksi per baris
+            tbody.innerHTML += `<tr><td>${i+1}</td><td>${t.layanan}</td><td>${t.gross}</td><td>${Math.round(p)}</td><td>${t.gross - Math.round(p)}</td><td><button class="btn-delete" onclick="hapusBaris(${t.id})">X</button></td></tr>`;
+        });
 
-            let prediksiPotonganHematOtomatis = 0;
-
-            dataHariIni.forEach((trip, index) => {
-                totalGross += trip.gross;
-                if (trip.layanan === 'standard') {
-                    totalPotonganStandard += trip.potongan;
-                } else {
-                    if (levelTerdeteksi === "Jawara") {
-                        if (trip.gross > 10200) {
-                            prediksiPotonganHematOtomatis += Math.floor(trip.gross * 0.08);
-                        }
-                    } else {
-                        prediksiPotonganHematOtomatis += Math.floor(trip.gross * 0.12);
-                    }
-                }
-
-                let lencanaLayanan = trip.layanan === 'standard' ? 
-                    `<span class="badge bg-standard">Standard</span>` : 
-                    `<span class="badge bg-hemat">Hemat</span>`;
-
-                tbody.innerHTML += `<tr>
-                    <td>${index + 1}</td>
-                    <td>${lencanaLayanan}</td>
-                    <td>Rp ${Math.round(trip.gross).toLocaleString('id-ID')}</td>
-                    <td style="color: #c62828;">Rp ${Math.round(trip.layanan === 'standard' ? trip.potongan : (potonganHematManual[tanggalTerpilih] ? (potonganHematManual[tanggalTerpilih]/dataHariIni.filter(i => i.layanan === 'hemat').length) : (levelTerdeteksi === 'Jawara' ? (trip.gross > 10200 ? trip.gross*0.08-100/dataHariIni.filter(i => i.layanan === 'hemat').length : 0) : trip.gross*0.12))).toLocaleString('id-ID')}</td>
-                    <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(trip.layanan === 'standard' ? trip.net : (trip.gross - (potonganHematManual[tanggalTerpilih] ? (potonganHematManual[tanggalTerpilih]/dataHariIni.filter(i => i.layanan === 'hemat').length) : (levelTerdeteksi === 'Jawara' ? (trip.gross > 10200 ? trip.gross*0.08-100/dataHariIni.filter(i => i.layanan === 'hemat').length : 0) : trip.gross*0.12)))).toLocaleString('id-ID')}</td>
-                    <td><button class="btn-delete" onclick="hapusBaris(${trip.id})">X</button></td>
-                </tr>`;
-            });
-
-            if (levelTerdeteksi === "Jawara" && prediksiPotonganHematOtomatis > 0) {
-                prediksiPotonganHematOtomatis -= 100;
-            }
-
-            let labelHematStatus = "";
-            if (potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0) {
-                totalPotonganHemat = potonganHematManual[tanggalTerpilih];
-                labelHematStatus = " (Asli)";
-            } else {
-                totalPotonganHemat = prediksiPotonganHematOtomatis;
-                labelHematStatus = ` (Prediksi ${levelTerdeteksi})`;
-            }
-
-            let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
-            totalNet = totalGross - totalPotonganKombinasi;
-
-            let persenStandardTeks = totalPotonganStandard > 0 ? " (8.00%)" : " (0%)";
-            let persenTotalTeks = (totalGross > 0 && totalPotonganKombinasi > 0) ? ` (${((totalPotonganKombinasi / totalGross) * 100).toFixed(2)}%)` : "";
-
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}${persenStandardTeks}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')}${persenTotalTeks}`;
-
-        } else {
-            boxPotongan.style.display = "none"; 
-
-            if (modeTampilan === 'minggu') {
-                header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
-                document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
-
-                let kelompokMingguan = {};
-                masterData.forEach(item => {
-                    let senin = getAwalMinggu(item.tanggal);
-                    if (!kelompokMingguan[senin]) kelompokMingguan[senin] = { order: 0, gross: 0, potStd: 0, potHmt: 0 };
-                    kelompokMingguan[senin].order += 1;
-                    kelompokMingguan[senin].gross += item.gross;
-                    if(item.layanan === 'standard') kelompokMingguan[senin].potStd += item.potongan;
-                });
-
-                Object.keys(potonganHematManual).forEach(tgl => {
-                    let senin = getAwalMinggu(tgl);
-                    if (kelompokMingguan[senin]) kelompokMingguan[senin].potHmt += potonganHematManual[tgl];
-                });
-
-                Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
-                    let k = kelompokMingguan[minggu];
-                    let totalPotRow = k.potStd + k.potHmt;
-                    let netMinggu = k.gross - totalPotRow;
-                    totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
-                    
-                    tbody.innerHTML += `<tr>
-                        <td>${minggu}</td>
-                        <td>${k.order}</td>
-                        <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Std: Rp ${Math.round(k.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(k.potHmt).toLocaleString('id-ID')}</td>
-                        <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netMinggu).toLocaleString('id-ID')}</td>
-                    </tr>`;
-                });
-
-            } else if (modeTampilan === 'bulan') {
-                header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
-                document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
-
-                let kelompokBulanan = {};
-                masterData.forEach(item => {
-                    let bulan = item.tanggal.substring(0, 7);
-                    if (!kelompokBulanan[bulan]) kelompokBulanan[bulan] = { order: 0, gross: 0, potStd: 0, potHmt: 0 };
-                    kelompokBulanan[bulan].order += 1;
-                    kelompokBulanan[bulan].gross += item.gross;
-                    if(item.layanan === 'standard') kelompokBulanan[bulan].potStd += item.potongan;
-                });
-
-                Object.keys(potonganHematManual).forEach(tgl => {
-                    let bulan = tgl.substring(0, 7);
-                    if (kelompokBulanan[bulan]) kelompokBulanan[bulan].potHmt += potonganHematManual[tgl];
-                });
-
-                Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
-                    let b = kelompokBulanan[bln];
-                    let totalPotRow = b.potStd + b.potHmt;
-                    let netBulan = b.gross - totalPotRow;
-                    totalGross += b.gross; totalPotonganStandard += b.potStd; totalPotonganHemat += b.potHmt; totalOrder += b.order;
-                    
-                    tbody.innerHTML += `<tr>
-                        <td>${bln}</td>
-                        <td>${b.order}</td>
-                        <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Std: Rp ${Math.round(b.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(b.potHmt).toLocaleString('id-ID')}</td>
-                        <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netBulan).toLocaleString('id-ID')}</td>
-                    </tr>`;
-                });
-            }
-
-            let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
-            totalNet = totalGross - totalPotKombinasiSeluruh;
-
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotKombinasiSeluruh).toLocaleString('id-ID')}`;
-        }
-
-        document.getElementById('totalOrder').innerText = totalOrder;
-        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
-        document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
+        document.getElementById('sumGross').innerText = "Rp " + totalGross.toLocaleString();
+        document.getElementById('sumPotonganStandard').innerText = "Rp " + totalPotStd.toLocaleString();
+        document.getElementById('sumPotonganHemat').innerText = "Rp " + totalPotHmt.toLocaleString();
+        document.getElementById('sumNet').innerText = "Rp " + (totalGross - totalPotStd - totalPotHmt).toLocaleString();
     }
 
-    function exportDataKeJSON() {
-        let dataBkp = { masterData, potonganHematManual };
-        let blob = new Blob([JSON.stringify(dataBkp)], { type: "application/json" });
-        let a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `backup_ojol_${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
+    function hapusBaris(id) {
+        masterData = masterData.filter(i => i.id !== id);
+        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+        prosesDanTampilkan();
     }
-    
-    function pemicuPilihFileJSON() { document.getElementById('fileJSONInput').click(); }
-    
-    // BAGIAN INI SUDAH DI-UPGRADE AGAR COCOK DENGAN DUA FORMAT BACKUP
-    function importDataDariJSON(e) {
-        let file = e.target.files[0];
-        if (!file) return;
-        let reader = new FileReader();
-        reader.onload = function(evt) {
-            try {
-                let data = JSON.parse(evt.target.result);
-                
-                // Deteksi otomatis nama key data trip dan potongan
-                let dataTrip = data.masterData || data.riwayatTrip;
-                let dataPotongan = data.potonganHematManual || data.potonganManual || {};
 
-                if (dataTrip && Array.isArray(dataTrip)) {
-                    masterData = dataTrip;
-                    potonganHematManual = dataPotongan;
-                    localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
-                    localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
-                    prosesDanTampilkan();
-                    alert("Data berhasil dipulihkan!");
-                } else {
-                    alert("Format isi data tidak dikenali!");
-                }
-            } catch(err) { alert("File JSON tidak valid!"); }
-        };
-        reader.readAsText(file);
-    }
-    
-    function resetData() {
-        if(confirm("Hapus seluruh riwayat pembukuan?")) {
-            localStorage.clear(); masterData = []; potonganHematManual = {}; prosesDanTampilkan();
-        }
-    }
-    function downloadCSV() {
-        let csv = "Tanggal,Layanan,Gross,Potongan,Net\n";
-        masterData.forEach(t => { csv += `${t.tanggal},${t.layanan},${t.gross},${t.potongan},${t.net}\n`; });
-        let blob = new Blob([csv], { type: "text/csv" });
-        let a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-        a.download = "laporan_ojol.csv"; a.click();
+    function navigasiTanggal(n) {
+        let d = new Date(document.getElementById('tanggalTrip').value);
+        d.setDate(d.getDate() + n);
+        document.getElementById('tanggalTrip').value = d.toISOString().slice(0,10);
+        prosesDanTampilkan();
     }
 </script>
 </body>
