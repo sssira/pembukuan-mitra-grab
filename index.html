@@ -115,7 +115,7 @@
 
 <script>
     let masterData = [];
-    let potonganHematManual = {}; // Menyimpan database potongan manual berbasis tanggal { "YYYY-MM-DD": nominal }
+    let potonganHematManual = {}; 
     let modeTampilan = 'hari'; 
 
     document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
@@ -187,7 +187,7 @@
             potongan = gross - net;
         } else {
             gross = nilaiInput;
-            potongan = 0; // Biarkan 0 dahulu, kalkulasi potongan real ditumpuk di total harian esok harinya
+            potongan = 0; 
             net = gross;
         }
 
@@ -241,7 +241,6 @@
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
-            // Set value input sesuai data tersimpan
             document.getElementById('potonganAsliInput').value = potonganHematManual[tanggalTerpilih] || '';
 
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
@@ -268,13 +267,20 @@
                 </tr>`;
             });
 
-            // Tambahkan potongan manual dari sistem hemat esok harinya ke total kalkulasi akhir hari ini
             let potonganManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
             totalPotongan += potonganManualHariIni;
             totalNet = totalGross - totalPotongan;
 
+            // HITUNG PERSENTASE DINAMIS UNTUK RINGKASAN HARIAN
+            let persenTeks = "";
+            if (totalGross > 0 && totalPotongan > 0) {
+                let persen = (totalPotongan / totalGross) * 100;
+                persenTeks = ` (${persen.toFixed(2)}%)`;
+            }
+            document.getElementById('sumPotongan').innerText = `Rp ${Math.round(totalPotongan).toLocaleString('id-ID')}${persenTeks}`;
+
         } else {
-            boxPotongan.style.display = "none"; // Sembunyikan input potongan di tab rekap makro
+            boxPotongan.style.display = "none"; 
 
             if (modeTampilan === 'minggu') {
                 header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
@@ -289,7 +295,6 @@
                     kelompokMingguan[senin].potongan += item.potongan;
                 });
 
-                // Masukkan juga unsur potongan manual hemat ke dalam kalkulasi grup mingguan
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let senin = getAwalMinggu(tgl);
                     if (kelompokMingguan[senin]) {
@@ -301,11 +306,17 @@
                     let k = kelompokMingguan[minggu];
                     let netMinggu = k.gross - k.potongan;
                     totalGross += k.gross; totalPotongan += k.potongan; totalNet += netMinggu; totalOrder += k.order;
+                    
+                    let persenTeksMinggu = "";
+                    if (k.gross > 0 && k.potongan > 0) {
+                        persenTeksMinggu = ` (${((k.potongan / k.gross) * 100).toFixed(2)}%)`;
+                    }
+
                     tbody.innerHTML += `<tr>
                         <td>${minggu}</td>
                         <td>${k.order}</td>
                         <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Rp ${Math.round(k.potongan).toLocaleString('id-ID')}</td>
+                        <td style="color: #c62828;">Rp ${Math.round(k.potongan).toLocaleString('id-ID')}${persenTeksMinggu}</td>
                         <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netMinggu).toLocaleString('id-ID')}</td>
                     </tr>`;
                 });
@@ -323,7 +334,6 @@
                     kelompokBulanan[bulan].potongan += item.potongan;
                 });
 
-                // Masukkan potongan manual hemat ke dalam bulanan
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let bulan = tgl.substring(0, 7);
                     if (kelompokBulanan[bulan]) {
@@ -335,20 +345,32 @@
                     let b = kelompokBulanan[bln];
                     let netBulan = b.gross - b.potongan;
                     totalGross += b.gross; totalPotongan += b.potongan; totalNet += netBulan; totalOrder += b.order;
+                    
+                    let persenTeksBulan = "";
+                    if (b.gross > 0 && b.potongan > 0) {
+                        persenTeksBulan = ` (${((b.potongan / b.gross) * 100).toFixed(2)}%)`;
+                    }
+
                     tbody.innerHTML += `<tr>
                         <td>${bln}</td>
                         <td>${b.order}</td>
                         <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Rp ${Math.round(b.potongan).toLocaleString('id-ID')}</td>
+                        <td style="color: #c62828;">Rp ${Math.round(b.potongan).toLocaleString('id-ID')}${persenTeksBulan}</td>
                         <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netBulan).toLocaleString('id-ID')}</td>
                     </tr>`;
                 });
             }
+
+            // SET TEXT UNTUK RINGKASAN REKAP TOTAL DI BAWAH (MINGGU/BULAN)
+            let persenTeksTotal = "";
+            if (totalGross > 0 && totalPotongan > 0) {
+                persenTeksTotal = ` (${(totalPotongan / totalGross * 100).toFixed(2)}%)`;
+            }
+            document.getElementById('sumPotongan').innerText = `Rp ${Math.round(totalPotongan).toLocaleString('id-ID')}${persenTeksTotal}`;
         }
 
         document.getElementById('totalOrder').innerText = totalOrder;
         document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
-        document.getElementById('sumPotongan').innerText = `Rp ${Math.round(totalPotongan).toLocaleString('id-ID')}`;
         document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
     }
 
