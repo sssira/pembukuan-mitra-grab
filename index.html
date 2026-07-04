@@ -280,7 +280,6 @@
 
         let totalGross = 0, totalNet = 0, totalOrder = 0;
         let totalPotonganStandard = 0, totalPotonganHemat = 0;
-        let grossHematHanya = 0; 
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
         const levelTerdeteksi = autoDetectLevelDriver();
@@ -302,7 +301,6 @@
                 if (trip.layanan === 'standard') {
                     totalPotonganStandard += trip.potongan;
                 } else {
-                    grossHematHanya += trip.gross;
                     // Logika Prediksi Real-time tanpa KM
                     if (levelTerdeteksi === "Jawara") {
                         if (trip.gross > 10200) {
@@ -327,7 +325,6 @@
                 </tr>`;
             });
 
-            // Auto-Smoothing pembulatan Rp 100
             if (levelTerdeteksi === "Jawara" && prediksiPotonganHematOtomatis > 0) {
                 prediksiPotonganHematOtomatis -= 100;
             }
