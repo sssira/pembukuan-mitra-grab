@@ -31,6 +31,10 @@
         .red-bold { font-weight: bold; color: #c62828; }
         .green-bold { font-weight: bold; color: #2e7d32; }
         
+        .potongan-hemat-box { background-color: #fff3e0; padding: 10px; border: 1px solid #ffe0b2; border-radius: 5px; margin-top: 10px; }
+        .potongan-hemat-box label { color: #e65100; font-size: 13px; }
+        .potongan-hemat-box input { padding: 6px; font-size: 14px; margin-top: 4px; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 6px 4px; text-align: center; }
         th { background-color: #e8f5e9; }
@@ -72,15 +76,9 @@
         </select>
     </div>
 
-    <div class="form-group" id="groupArgoKotor">
+    <div class="form-group">
         <label id="labelArgo" for="argoInput">Masukkan Argo Kotor / Gross (Rp):</label>
         <input type="number" id="argoInput" placeholder="Contoh: 10200" onkeypress="handleKeyPress(event)">
-    </div>
-
-    <!-- FIELD INPUT BARU KHUSUS NET SESUNGGUHNYA UNTUK LAYANAN HEMAT -->
-    <div class="form-group" id="groupNetHemat">
-        <label for="netHematInput" style="color: #2e7d32;">Masukkan Net Bersih Esok Hari (Rp):</label>
-        <input type="number" id="netHematInput" placeholder="Tarif bersih asli yang Anda terima esok" onkeypress="handleKeyPress(event)">
     </div>
     
     <button onclick="tambahTrip()">Tambah Trip</button>
@@ -91,8 +89,13 @@
         <h3 id="judulRingkasan">Ringkasan Hari Ini</h3>
         <p>Total Orderan Sukses: <span id="totalOrder" class="bold">0</span></p>
         <p>Total Gross (Pendapatan Kotor): <span id="sumGross" class="bold">Rp 0</span></p>
-        <p>Prediksi Potongan Komisi (Maks 8%): <span id="sumPotongan" class="red-bold">Rp 0</span></p>
+        <p>Total Potongan Komisi: <span id="sumPotongan" class="red-bold">Rp 0</span></p>
         <p>Estimasi Pendapatan Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
+
+        <div class="potongan-hemat-box" id="boxPotonganAsliHemat">
+            <label for="potonganAsliInput"><b>Potongan Asli GB Hemat Esok Hari (Rp):</b><br><small>*Masukkan nominal transaksi 'Deduction' dari aplikasi GrabDriver</small></label>
+            <input type="number" id="potonganAsliInput" placeholder="Contoh dari riwayat: 3100" oninput="simpanPotonganManual()">
+        </div>
     </div>
 
     <table id="tabelTrip">
@@ -112,12 +115,16 @@
 
 <script>
     let masterData = [];
+    let potonganHematManual = {}; // Menyimpan database potongan manual berbasis tanggal { "YYYY-MM-DD": nominal }
     let modeTampilan = 'hari'; 
 
     document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
 
     if (localStorage.getItem('masterDataOjol')) {
         masterData = JSON.parse(localStorage.getItem('masterDataOjol'));
+    }
+    if (localStorage.getItem('potonganHematManualOjol')) {
+        potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol'));
     }
 
     updateLabelInput();
@@ -127,21 +134,17 @@
         if (event.key === "Enter") tambahTrip();
     }
 
-    // LOGIKA PENYAJIAN FORM BERDASARKAN SELEKSI JENIS LAYANAN
     function updateLabelInput() {
         const layanan = document.getElementById('jenisLayanan').value;
-        const labelArgo = document.getElementById('labelArgo');
-        const inputArgo = document.getElementById('argoInput');
-        const groupNetHemat = document.getElementById('groupNetHemat');
+        const label = document.getElementById('labelArgo');
+        const input = document.getElementById('argoInput');
         
         if (layanan === 'standard') {
-            labelArgo.innerText = "Masukkan Pendapatan Bersih / Net (Rp):";
-            inputArgo.placeholder = "Contoh: 11200";
-            groupNetHemat.style.display = "none"; // Sembunyikan field tambahan
+            label.innerText = "Masukkan Pendapatan Bersih / Net (Rp):";
+            input.placeholder = "Contoh: 11200";
         } else {
-            labelArgo.innerText = "Masukkan Argo Kotor / Gross (Rp):";
-            inputArgo.placeholder = "Contoh: 10200";
-            groupNetHemat.style.display = "block"; // Tampilkan field tambahan untuk hemat
+            label.innerText = "Masukkan Argo Kotor / Gross (Rp):";
+            input.placeholder = "Contoh: 10200";
         }
     }
 
@@ -156,35 +159,36 @@
         if(modeTampilan === 'hari') prosesDanTampilkan();
     }
 
+    function simpanPotonganManual() {
+        const tanggalTerpilih = document.getElementById('tanggalTrip').value;
+        const val = parseInt(document.getElementById('potonganAsliInput').value) || 0;
+        
+        if(val >= 0) {
+            potonganHematManual[tanggalTerpilih] = val;
+            localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+            prosesDanTampilkan();
+        }
+    }
+
     function tambahTrip() {
         const inputTanggal = document.getElementById('tanggalTrip').value;
         const inputArgo = document.getElementById('argoInput');
-        const inputNetHemat = document.getElementById('netHematInput');
         const layanan = document.getElementById('jenisLayanan').value;
-        
-        const nilaiArgo = parseInt(inputArgo.value);
-        const nilaiNetHemat = parseInt(inputNetHemat.value);
+        const nilaiInput = parseInt(inputArgo.value);
 
         if (!inputTanggal) return alert("Pilih tanggal terlebih dahulu!");
-        if (isNaN(nilaiArgo) || nilaiArgo <= 0) return alert("Masukkan nominal angka argo yang valid!");
+        if (isNaN(nilaiInput) || nilaiInput <= 0) return alert("Masukkan nominal angka yang valid!");
 
         let gross = 0, potongan = 0, net = 0;
 
         if (layanan === 'standard') {
-            net = nilaiArgo;
+            net = nilaiInput;
             gross = Math.round(net * (100 / 92));
             potongan = gross - net;
         } else {
-            // Logika baru untuk GrabBike Hemat
-            if (isNaN(nilaiNetHemat) || nilaiNetHemat <= 0) {
-                return alert("Untuk layanan Hemat, masukkan juga perkiraan nominal Net Bersih sesungguhnya!");
-            }
-            if (nilaiNetHemat > nilaiArgo) {
-                return alert("Nominal Net Bersih tidak boleh lebih besar dari Argo Kotor!");
-            }
-            gross = nilaiArgo;
-            net = nilaiNetHemat;
-            potongan = gross - net; // Potongan nyata dari selisih esok hari
+            gross = nilaiInput;
+            potongan = 0; // Biarkan 0 dahulu, kalkulasi potongan real ditumpuk di total harian esok harinya
+            net = gross;
         }
 
         masterData.push({
@@ -198,7 +202,6 @@
 
         localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
         inputArgo.value = '';
-        inputNetHemat.value = '';
         inputArgo.focus();
         gantiTampilan('hari');
     }
@@ -230,12 +233,17 @@
     function prosesDanTampilkan() {
         const tbody = document.querySelector('#tabelTrip tbody');
         const header = document.getElementById('headerTabel');
+        const boxPotongan = document.getElementById('boxPotonganAsliHemat');
         tbody.innerHTML = '';
 
         let totalGross = 0, totalPotongan = 0, totalNet = 0, totalOrder = 0;
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
 
         if (modeTampilan === 'hari') {
+            boxPotongan.style.display = "block";
+            // Set value input sesuai data tersimpan
+            document.getElementById('potonganAsliInput').value = potonganHematManual[tanggalTerpilih] || '';
+
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             document.getElementById('judulRingkasan').innerText = `Ringkasan Riwayat: ${tanggalTerpilih}`;
             
@@ -245,7 +253,6 @@
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
                 totalPotongan += trip.potongan;
-                totalNet += trip.net;
 
                 let lencanaLayanan = trip.layanan === 'standard' ? 
                     `<span class="badge bg-standard">Standard</span>` : 
@@ -261,59 +268,82 @@
                 </tr>`;
             });
 
-        } else if (modeTampilan === 'minggu') {
-            header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
-            document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
+            // Tambahkan potongan manual dari sistem hemat esok harinya ke total kalkulasi akhir hari ini
+            let potonganManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
+            totalPotongan += potonganManualHariIni;
+            totalNet = totalGross - totalPotongan;
 
-            let kelompokMingguan = {};
-            masterData.forEach(item => {
-                let senin = getAwalMinggu(item.tanggal);
-                if (!kelompokMingguan[senin]) kelompokMingguan[senin] = { order: 0, gross: 0, potongan: 0, net: 0 };
-                kelompokMingguan[senin].order += 1;
-                kelompokMingguan[senin].gross += item.gross;
-                kelompokMingguan[senin].potongan += item.potongan;
-                kelompokMingguan[senin].net += item.net;
-                
-                totalGross += item.gross; totalPotongan += item.potongan; totalNet += item.net; totalOrder += 1;
-            });
+        } else {
+            boxPotongan.style.display = "none"; // Sembunyikan input potongan di tab rekap makro
 
-            Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
-                let k = kelompokMingguan[minggu];
-                tbody.innerHTML += `<tr>
-                    <td>${minggu}</td>
-                    <td>${k.order}</td>
-                    <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
-                    <td>Rp ${Math.round(k.potongan).toLocaleString('id-ID')}</td>
-                    <td>Rp ${Math.round(k.net).toLocaleString('id-ID')}</td>
-                </tr>`;
-            });
+            if (modeTampilan === 'minggu') {
+                header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
+                document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
 
-        } else if (modeTampilan === 'bulan') {
-            header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
-            document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
+                let kelompokMingguan = {};
+                masterData.forEach(item => {
+                    let senin = getAwalMinggu(item.tanggal);
+                    if (!kelompokMingguan[senin]) kelompokMingguan[senin] = { order: 0, gross: 0, potongan: 0 };
+                    kelompokMingguan[senin].order += 1;
+                    kelompokMingguan[senin].gross += item.gross;
+                    kelompokMingguan[senin].potongan += item.potongan;
+                });
 
-            let kelompokBulanan = {};
-            masterData.forEach(item => {
-                let bulan = item.tanggal.substring(0, 7);
-                if (!kelompokBulanan[bulan]) kelompokBulanan[bulan] = { order: 0, gross: 0, potongan: 0, net: 0 };
-                kelompokBulanan[bulan].order += 1;
-                kelompokBulanan[bulan].gross += item.gross;
-                kelompokBulanan[bulan].potongan += item.potongan;
-                kelompokBulanan[bulan].net += item.net;
+                // Masukkan juga unsur potongan manual hemat ke dalam kalkulasi grup mingguan
+                Object.keys(potonganHematManual).forEach(tgl => {
+                    let senin = getAwalMinggu(tgl);
+                    if (kelompokMingguan[senin]) {
+                        kelompokMingguan[senin].potongan += potonganHematManual[tgl];
+                    }
+                });
 
-                totalGross += item.gross; totalPotongan += item.potongan; totalNet += item.net; totalOrder += 1;
-            });
+                Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
+                    let k = kelompokMingguan[minggu];
+                    let netMinggu = k.gross - k.potongan;
+                    totalGross += k.gross; totalPotongan += k.potongan; totalNet += netMinggu; totalOrder += k.order;
+                    tbody.innerHTML += `<tr>
+                        <td>${minggu}</td>
+                        <td>${k.order}</td>
+                        <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
+                        <td style="color: #c62828;">Rp ${Math.round(k.potongan).toLocaleString('id-ID')}</td>
+                        <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netMinggu).toLocaleString('id-ID')}</td>
+                    </tr>`;
+                });
 
-            Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
-                let b = kelompokBulanan[bln];
-                tbody.innerHTML += `<tr>
-                    <td>${bln}</td>
-                    <td>${b.order}</td>
-                    <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
-                    <td>Rp ${Math.round(b.potongan).toLocaleString('id-ID')}</td>
-                    <td>Rp ${Math.round(b.net).toLocaleString('id-ID')}</td>
-                </tr>`;
-            });
+            } else if (modeTampilan === 'bulan') {
+                header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Total Potongan</th><th>Total Net</th>`;
+                document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
+
+                let kelompokBulanan = {};
+                masterData.forEach(item => {
+                    let bulan = item.tanggal.substring(0, 7);
+                    if (!kelompokBulanan[bulan]) kelompokBulanan[bulan] = { order: 0, gross: 0, potongan: 0 };
+                    kelompokBulanan[bulan].order += 1;
+                    kelompokBulanan[bulan].gross += item.gross;
+                    kelompokBulanan[bulan].potongan += item.potongan;
+                });
+
+                // Masukkan potongan manual hemat ke dalam bulanan
+                Object.keys(potonganHematManual).forEach(tgl => {
+                    let bulan = tgl.substring(0, 7);
+                    if (kelompokBulanan[bulan]) {
+                        kelompokBulanan[bulan].potongan += potonganHematManual[tgl];
+                    }
+                });
+
+                Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
+                    let b = kelompokBulanan[bln];
+                    let netBulan = b.gross - b.potongan;
+                    totalGross += b.gross; totalPotongan += b.potongan; totalNet += netBulan; totalOrder += b.order;
+                    tbody.innerHTML += `<tr>
+                        <td>${bln}</td>
+                        <td>${b.order}</td>
+                        <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
+                        <td style="color: #c62828;">Rp ${Math.round(b.potongan).toLocaleString('id-ID')}</td>
+                        <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netBulan).toLocaleString('id-ID')}</td>
+                    </tr>`;
+                });
+            }
         }
 
         document.getElementById('totalOrder').innerText = totalOrder;
@@ -323,12 +353,12 @@
     }
 
     document.getElementById('tanggalTrip').addEventListener('change', () => {
-        if(modeTampilan === 'hari') prosesDanTampilkan();
+        prosesDanTampilkan();
     });
 
     function downloadCSV() {
         if (masterData.length === 0) return alert("Belum ada data untuk diekspor!");
-        let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jenis Layanan,Argo Kotor (Gross),Potongan,Net (Bersih)\n";
+        let csvContent = "data:text/csv;charset=utf-8,Tanggal,Jenis Layanan,Argo Kotor (Gross),Potongan Langsung,Net (Bersih)\n";
         
         masterData.sort((a,b) => new Date(a.tanggal) - new Date(b.tanggal)).forEach(t => {
             csvContent += `${t.tanggal},${t.layanan.toUpperCase()},${Math.round(t.gross)},${Math.round(t.potongan)},${Math.round(t.net)}\n`;
@@ -344,7 +374,9 @@
     function resetData() {
         if (confirm("🚨 PERINGATAN: Semua riwayat lintas tanggal yang tersimpan di HP akan dihapus permanen!")) {
             masterData = [];
+            potonganHematManual = {};
             localStorage.removeItem('masterDataOjol');
+            localStorage.removeItem('potonganHematManualOjol');
             prosesDanTampilkan();
         }
     }
