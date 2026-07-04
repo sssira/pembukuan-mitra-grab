@@ -6,7 +6,7 @@
     <title>Pembukuan Trip Ojol</title>
     <meta name="theme-color" content="#00b14f">
     
-    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Kalkulator%20%26%20Pembukuan%20Trip%20Ojol%22%2C%22short_name%22%3A%22TripOjol%22%2C%22start_url%22%3A%22%2Fpembukuan-ojol%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f4f4f9%22%2C%22theme_color%22%3A%22%2300b14f%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20512%20512%27%3E%3Crect%20width%3D%27512%27%20height%3D%27512%27%20rx%3D%2720%25%27%20fill%3D%27%2300b14f%27%2F%3E%3Ccircle%20cx%3D%27256%27%20cy%3D%27256%27%20r%3D%27220%27%20fill%3D%27none%27%20stroke%3D%27white%27%20stroke-width%3D%2735%27%2F%3E%3Cpath%20d%3D%27M180%20190h60v-60h20v60h60v20h-60v60h-20v-60h-60zm152%2040h60v20h-60zm-152%2090h60v20h-60zm0%2030h60v20h-60zm152-30h60v20h-60zm0%2030h60v20h-60z%27%20fill%3D%27white%27%2F%3E%3C%2Svg%3E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+    <link rel="manifest" href="manifest.json">
 
     <style>
         body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f4f9; color: #333; }
@@ -374,5 +374,14 @@
         }
     });
 </script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then((reg) => console.log('Service Worker terdaftar!', reg))
+        .catch((err) => console.log('Gagal mendaftarkan Service Worker', err));
+    });
+  }
+    </script>
 </body>
 </html>
