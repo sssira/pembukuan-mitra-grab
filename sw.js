@@ -1,8 +1,8 @@
 const CACHE_NAME = 'trip-ojol-v1';
 const ASSETS = [
-  'index.html',
-  'manifest.json'
-  // Tambahkan file CSS atau JS eksternal jika ada, atau ikon Anda
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 // Install Service Worker
