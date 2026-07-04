@@ -16,28 +16,20 @@
         .date-nav button { width: auto; flex: 1; padding: 10px; background-color: #0288d1; font-weight: bold; margin: 0; color: white; border: none; border-radius: 5px;}
         .date-nav input[type="date"] { flex: 3; }
         button { width: 100%; padding: 10px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
-        button.download { background-color: #1565c0; }
         button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; color: white; border: none;}
-        .backup-zone { display: flex; gap: 8px; margin-bottom: 12px; }
-        .btn-backup { background-color: #00796b; font-size: 14px; margin-bottom: 0; }
-        .btn-restore { background-color: #7b1fa2; font-size: 14px; margin-bottom: 0; }
         .summary-box { margin-top: 15px; padding: 12px; background-color: #efebe9; border-radius: 5px; border-left: 5px solid #ff9800; }
         .summary-box h3 { margin: 0 0 8px 0; font-size: 16px; color: #5d4037; border-bottom: 1px dashed #bcaaa4; padding-bottom: 4px; }
         .summary-box p { margin: 6px 0; font-size: 14px; display: flex; justify-content: space-between; }
         .bold { font-weight: bold; color: #333; }
         .red-bold { font-weight: bold; color: #c62828; }
         .green-bold { font-weight: bold; color: #2e7d32; }
-        .potongan-section { border-top: 1px solid #d7ccc8; margin-top: 6px; padding-top: 6px; }
         .potongan-hemat-box { background-color: #fff3e0; padding: 10px; border: 1px solid #ffe0b2; border-radius: 5px; margin-top: 8px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { border: 1px solid #ddd; padding: 6px 4px; text-align: center; }
         th { background-color: #e8f5e9; }
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;}
+        .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; flex: 1; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .tab-btn.active { background-color: #2e7d32; color: white; }
-        .badge { padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; }
-        .bg-hemat { background-color: #43a047; }
-        .bg-standard { background-color: #0288d1; }
     </style>
 </head>
 <body>
@@ -84,7 +76,7 @@
 
         <div class="potongan-hemat-box" id="boxPotonganAsliHemat">
             <label for="potonganAsliInput">Potongan Asli Hemat (Deduction):</label>
-            <input type="number" id="potonganAsliInput" oninput="simpanPotonganManual()">
+            <input type="number" id="potonganAsliInput" placeholder="Masukkan jika ada" oninput="simpanPotonganManual()">
         </div>
     </div>
 
@@ -107,15 +99,21 @@
         document.getElementById('labelArgo').innerText = layanan === 'standard' ? "Masukkan Net (Rp):" : "Masukkan Gross (Rp):";
     }
 
-    function tambahTrip() {
-        const tanggal = document.getElementById('tanggalTrip').value;
-        const argo = parseInt(document.getElementById('argoInput').value);
-        const layanan = document.getElementById('jenisLayanan').value;
-        if (!argo) return;
+    function autoDetectLevelDriver() {
+        // Logika sederhana: jika ada banyak trip Hemat < 10200, kemungkinan Jawara
+        let counts = masterData.filter(i => i.layanan === 'hemat' && i.gross <= 10200).length;
+        return counts > 5 ? "Jawara" : "Ksatria";
+    }
 
-        let gross = (layanan === 'standard') ? Math.round(argo * (100/92)) : argo;
-        let potongan = (layanan === 'standard') ? (gross - argo) : 0;
-        masterData.push({ id: Date.now(), tanggal, layanan, gross, potongan, net: gross - potongan });
+    function tambahTrip() {
+        const tgl = document.getElementById('tanggalTrip').value;
+        const input = parseInt(document.getElementById('argoInput').value);
+        const lay = document.getElementById('jenisLayanan').value;
+        if (!input) return;
+
+        let g = (lay === 'standard') ? Math.round(input * (100/92)) : input;
+        let p = (lay === 'standard') ? (g - input) : 0;
+        masterData.push({ id: Date.now(), tanggal: tgl, layanan: lay, gross: g, potongan: p, net: g - p });
         localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
         document.getElementById('argoInput').value = '';
         prosesDanTampilkan();
@@ -132,24 +130,25 @@
         const tgl = document.getElementById('tanggalTrip').value;
         const tbody = document.querySelector('#tabelTrip tbody');
         tbody.innerHTML = '';
-        let totalGross = 0, totalPotStd = 0, totalPotHmt = 0;
-
-        let data = masterData.filter(i => i.tanggal === tgl);
         
-        // Logika Batas Maksimal 8% untuk Hemat
-        let grossHmt = 0;
-        data.forEach(t => {
-            if(t.layanan === 'hemat') grossHmt += t.gross;
-            totalGross += t.gross;
-            totalPotStd += t.potongan;
-        });
-
-        totalPotHmt = potonganHematManual[tgl] !== undefined ? potonganHematManual[tgl] : Math.floor(grossHmt * 0.08);
+        let totalGross = 0, totalPotStd = 0, totalPotHmt = 0;
+        let data = masterData.filter(i => i.tanggal === tgl);
+        let level = autoDetectLevelDriver();
 
         data.forEach((t, i) => {
-            let p = t.layanan === 'standard' ? t.potongan : (t.gross * 0.08); // Prediksi per baris
+            totalGross += t.gross;
+            if(t.layanan === 'standard') totalPotStd += t.potongan;
+
+            let p = 0;
+            if(t.layanan === 'hemat') {
+                let dasar = (level === 'Jawara') ? (t.gross * 0.08) : (t.gross * 0.12);
+                p = Math.min(dasar, t.gross * 0.08); // Batas maksimal 8%
+            }
+            
             tbody.innerHTML += `<tr><td>${i+1}</td><td>${t.layanan}</td><td>${t.gross}</td><td>${Math.round(p)}</td><td>${t.gross - Math.round(p)}</td><td><button class="btn-delete" onclick="hapusBaris(${t.id})">X</button></td></tr>`;
         });
+
+        totalPotHmt = potonganHematManual[tgl] !== undefined ? potonganHematManual[tgl] : Math.floor(data.filter(i => i.layanan === 'hemat').reduce((a, b) => a + (b.gross * 0.08), 0));
 
         document.getElementById('sumGross').innerText = "Rp " + totalGross.toLocaleString();
         document.getElementById('sumPotonganStandard').innerText = "Rp " + totalPotStd.toLocaleString();
@@ -169,6 +168,8 @@
         document.getElementById('tanggalTrip').value = d.toISOString().slice(0,10);
         prosesDanTampilkan();
     }
+
+    function gantiTampilan(m) { modeTampilan = m; prosesDanTampilkan(); }
 </script>
 </body>
 </html>
