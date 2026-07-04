@@ -328,34 +328,7 @@
         }
     }
 
-    // REGISTRASI SERVICE WORKER PWA SECARA REALTIME
-    if ('serviceWorker' in navigator) {
-        const swCode = `
-            const CACHE_NAME = 'ojol-calc-v5';
-            self.addEventListener('install', e => {
-                self.skipWaiting();
-            });
-            self.addEventListener('activate', e => {
-                e.waitUntil(self.clients.claim());
-            });
-            self.addEventListener('fetch', e => {
-                e.respondWith(
-                    fetch(e.request).catch(() => {
-                        return new Response("Offline Mode Terkendali.");
-                    })
-                );
-            });
-        `;
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        navigator.serviceWorker.register(URL.createObjectURL(blob))
-            .then(reg => {
-                console.log('PWA Service Worker Aktif Sempurna');
-                reg.update(); // Memaksa pembaruan instan
-            })
-            .catch(err => console.log('Gagal:', err));
-    }
-
-    // Tangkap Trigger Tombol Install Asli Android Chrome
+    // LOGIKA MANAJEMEN INSTALASI PWA (SATU DIALECT BERSIH)
     let pemicuInstalasi;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -373,15 +346,18 @@
             pemicuInstalasi = null;
         }
     });
+
+    // DAFTARKAN FILE SW.JS FISIK ANDA UNTUK FITUR OFFLINE & SYARAT INSTALL CHROME
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then((reg) => {
+                    console.log('Service Worker Utama Berhasil Aktif!', reg);
+                    reg.update(); 
+                })
+                .catch((err) => console.log('Gagal mendaftarkan Service Worker:', err));
+        });
+    }
 </script>
-    <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js')
-        .then((reg) => console.log('Service Worker terdaftar!', reg))
-        .catch((err) => console.log('Gagal mendaftarkan Service Worker', err));
-    });
-  }
-    </script>
 </body>
 </html>
