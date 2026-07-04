@@ -1,11 +1,12 @@
 {
   "name": "Pembukuan Trip Ojol",
   "short_name": "TripOjol",
-  "description": "Kalkulator & Pembukuan Trip Ojek Online",
-  "start_url": "index.html",
+  "description": "Kalkulator Potongan Komisi & Pembukuan Trip Grab",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2e7d32",
+  "theme_color": "#00b14f",
   "orientation": "portrait",
   "icons": [
     {
