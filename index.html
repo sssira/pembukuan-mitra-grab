@@ -248,7 +248,6 @@
         return new Date(date.setDate(diff)).toISOString().slice(0,10);
     }
 
-    // --- STRUKTUR BARU JALUR PINTAR PREDIKSI & DETEKSI LEVEL ---
     function autoDetectLevelDriver() {
         let rentangTanggalRiwayat = Object.keys(potonganHematManual);
         if (rentangTanggalRiwayat.length < 3) return "Jawara"; 
@@ -301,7 +300,6 @@
                 if (trip.layanan === 'standard') {
                     totalPotonganStandard += trip.potongan;
                 } else {
-                    // Logika Prediksi Real-time tanpa KM
                     if (levelTerdeteksi === "Jawara") {
                         if (trip.gross > 10200) {
                             prediksiPotonganHematOtomatis += Math.floor(trip.gross * 0.08);
@@ -315,12 +313,13 @@
                     `<span class="badge bg-standard">Standard</span>` : 
                     `<span class="badge bg-hemat">Hemat</span>`;
 
+                // Tampilan per baris harian menggunakan nilai trip asli agar akurat
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td>${lencanaLayanan}</td>
                     <td>Rp ${Math.round(trip.gross).toLocaleString('id-ID')}</td>
-                    <td style="color: #c62828;">Rp ${Math.round(trip.potongan).toLocaleString('id-ID')}</td>
-                    <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(trip.net).toLocaleString('id-ID')}</td>
+                    <td style="color: #c62828;">Rp ${Math.round(trip.layanan === 'standard' ? trip.potongan : (potonganHematManual[tanggalTerpilih] ? (potonganHematManual[tanggalTerpilih]/dataHariIni.filter(i => i.layanan === 'hemat').length) : (levelTerdeteksi === 'Jawara' ? (trip.gross > 10200 ? trip.gross*0.08-100/dataHariIni.filter(i => i.layanan === 'hemat').length : 0) : trip.gross*0.12))).toLocaleString('id-ID')}</td>
+                    <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(trip.layanan === 'standard' ? trip.net : (trip.gross - (potonganHematManual[tanggalTerpilih] ? (potonganHematManual[tanggalTerpilih]/dataHariIni.filter(i => i.layanan === 'hemat').length) : (levelTerdeteksi === 'Jawara' ? (trip.gross > 10200 ? trip.gross*0.08-100/dataHariIni.filter(i => i.layanan === 'hemat').length : 0) : trip.gross*0.12)))).toLocaleString('id-ID')}</td>
                     <td><button class="btn-delete" onclick="hapusBaris(${trip.id})">X</button></td>
                 </tr>`;
             });
@@ -431,7 +430,6 @@
         document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
     }
 
-    // --- FUNGSI TAMBAHAN BACKUP / RESTORE AGAR TIDAK EROR ---
     function exportDataKeJSON() {
         let dataBkp = { masterData, potonganHematManual };
         let blob = new Blob([JSON.stringify(dataBkp)], { type: "application/json" });
