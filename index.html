@@ -251,7 +251,7 @@
     // --- STRUKTUR BARU JALUR PINTAR PREDIKSI & DETEKSI LEVEL ---
     function autoDetectLevelDriver() {
         let rentangTanggalRiwayat = Object.keys(potonganHematManual);
-        if (rentangTanggalRiwayat.length < 3) return "Jawara"; // Default fallback
+        if (rentangTanggalRiwayat.length < 3) return "Jawara"; 
 
         let totalHariCek = 0;
         let kecenderunganJawara = 0;
@@ -332,7 +332,6 @@
                 prediksiPotonganHematOtomatis -= 100;
             }
 
-            // Gunakan input manual jika sudah ada, jika kosong langsung pakai prediksi cerdas PWA
             let labelHematStatus = "";
             if (potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0) {
                 totalPotonganHemat = potonganHematManual[tanggalTerpilih];
