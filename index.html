@@ -24,7 +24,6 @@
         button.download { background-color: #1565c0; }
         button.btn-delete { background-color: #e53935; padding: 4px 8px; font-size: 12px; font-weight: bold; border-radius: 3px; width: auto; margin: 0; color: white; border: none;}
         
-        /* Gaya baru untuk area Backup/Restore */
         .backup-zone { display: flex; gap: 8px; margin-bottom: 12px; }
         .btn-backup { background-color: #00796b; font-size: 14px; margin-bottom: 0; }
         .btn-restore { background-color: #7b1fa2; font-size: 14px; margin-bottom: 0; }
@@ -313,7 +312,6 @@
                     `<span class="badge bg-standard">Standard</span>` : 
                     `<span class="badge bg-hemat">Hemat</span>`;
 
-                // Tampilan per baris harian menggunakan nilai trip asli agar akurat
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td>${lencanaLayanan}</td>
@@ -438,7 +436,10 @@
         a.download = `backup_ojol_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     }
+    
     function pemicuPilihFileJSON() { document.getElementById('fileJSONInput').click(); }
+    
+    // BAGIAN INI SUDAH DI-UPGRADE AGAR COCOK DENGAN DUA FORMAT BACKUP
     function importDataDariJSON(e) {
         let file = e.target.files[0];
         if (!file) return;
@@ -446,18 +447,26 @@
         reader.onload = function(evt) {
             try {
                 let data = JSON.parse(evt.target.result);
-                if (data.masterData) {
-                    masterData = data.masterData;
-                    potonganHematManual = data.potonganHematManual || {};
+                
+                // Deteksi otomatis nama key data trip dan potongan
+                let dataTrip = data.masterData || data.riwayatTrip;
+                let dataPotongan = data.potonganHematManual || data.potonganManual || {};
+
+                if (dataTrip && Array.isArray(dataTrip)) {
+                    masterData = dataTrip;
+                    potonganHematManual = dataPotongan;
                     localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
                     localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
                     prosesDanTampilkan();
                     alert("Data berhasil dipulihkan!");
+                } else {
+                    alert("Format isi data tidak dikenali!");
                 }
             } catch(err) { alert("File JSON tidak valid!"); }
         };
         reader.readAsText(file);
     }
+    
     function resetData() {
         if(confirm("Hapus seluruh riwayat pembukuan?")) {
             localStorage.clear(); masterData = []; potonganHematManual = {}; prosesDanTampilkan();
