@@ -1,6 +1,6 @@
 {
   "name": "Pembukuan Trip Ojol",
-  "short_name": "TripOjol",
+  "short_name": "PembukuanTripOjol",
   "description": "Kalkulator Potongan Komisi & Pembukuan Trip Grab",
   "start_url": "./index.html",
   "scope": "./",
