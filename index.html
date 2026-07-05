@@ -419,14 +419,27 @@
                 }
 
                 let lencanaLayanan = trip.layanan === 'standard' ? `<span class="badge bg-standard">Standard</span>` : `<span class="badge bg-hemat">Hemat</span>`;
-                let argoTampil = trip.layanan === 'standard' ? trip.net : trip.gross;
+                
+                // --- PENYESUAIAN ARGO & POTONGAN HARDCODE ---
+                let argoTampil = 0;
+                let potBarisTampil = potBaris;
+
+                if (trip.layanan === 'standard') {
+                    // Bulatkan nilai gross ke ratusan ke bawah (Contoh: 12174 -> 12100)
+                    argoTampil = Math.floor(trip.gross / 100) * 100;
+                    // Sesuaikan potongan baris agar rumus (ArgoTampil - PotonganTampil = Net) tetap pas!
+                    potBarisTampil = argoTampil - trip.net;
+                } else {
+                    argoTampil = trip.gross;
+                }
+                // ---------------------------------------------
 
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td>${lencanaLayanan}</td>
                     <td>Rp ${Math.floor(argoTampil).toLocaleString('id-ID')}</td>
-                    <td style="color: #dc3545;">Rp ${Math.floor(potBaris).toLocaleString('id-ID')}</td>
-                    <td style="color: #28a745; font-weight: bold;">Rp ${Math.floor(trip.gross - potBaris).toLocaleString('id-ID')}</td>
+                    <td style="color: #dc3545;">Rp ${Math.floor(potBarisTampil).toLocaleString('id-ID')}</td>
+                    <td style="color: #28a745; font-weight: bold;">Rp ${Math.floor(trip.net).toLocaleString('id-ID')}</td>
                     <td class="action-cell">
                         <button class="btn-gear" onclick="toggleDropdown(event, ${trip.id})">⚙️</button>
                         <div class="dropdown-menu" id="drop-${trip.id}">
@@ -446,7 +459,6 @@
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
-            // Hitung Persentase Real-Time Khusus untuk GB Hemat & Total Komisi
             let persenHemat = totalGross > 0 ? ((totalPotonganHemat / totalGross) * 100).toFixed(2) : "0.00";
             let persenTotal = totalGross > 0 ? ((totalPotonganKombinasi / totalGross) * 100).toFixed(2) : "0.00";
 
