@@ -23,7 +23,6 @@
         button.btn-primary { width: 100%; padding: 14px; background-color: #00b14f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 10px; font-weight: bold; transition: background 0.2s; }
         button.btn-primary:hover { background-color: #009643; }
         
-        /* Menu Pengaturan Lipat (Accordion) */
         .accordion-section { border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 15px; background: #f1f3f5; overflow: hidden; }
         .accordion-toggle { background: #e9ecef; padding: 10px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; color: #495057; display: flex; justify-content: center; align-items: center; gap: 5px; }
         .accordion-content { display: none; padding: 12px; border-top: 1px solid #dee2e6; background: #fff; }
@@ -51,20 +50,29 @@
         .tab-btn { background-color: #e9ecef; color: #495057; padding: 10px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;}
         .tab-btn.active { background-color: #00b14f; color: white; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; background: white; }
-        th, td { border: 1px solid #dee2e6; padding: 8px 6px; text-align: center; }
+        /* Modifikasi Desain Tabel Lebih Bersih */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; background: white; border: 1px solid #dee2e6; }
+        th, td { border: 1px solid #dee2e6; padding: 10px 6px; text-align: center; vertical-align: middle; }
         th { background-color: #f1f3f5; color: #495057; font-weight: 700; }
         
-        .btn-action { background: none; border: none; font-size: 15px; cursor: pointer; padding: 2px; }
-        .btn-edit-row { color: #0288d1; }
-        .btn-delete-row { color: #dc3545; }
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; display: inline-block; }
         .bg-hemat { background-color: #28a745; }
         .bg-standard { background-color: #007bff; }
+        
+        /* Menu Dropdown Aksi (Gear) */
+        .action-cell { position: relative; }
+        .btn-gear { background: none; border: none; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 4px; color: #6c757d; }
+        .btn-gear:hover { background-color: #f1f3f5; }
+        
+        .dropdown-menu { display: none; position: absolute; right: 6px; top: 34px; background: white; border: 1px solid #dee2e6; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); z-index: 100; min-width: 80px; overflow: hidden; }
+        .dropdown-menu button { display: block; width: 100%; padding: 10px 12px; font-size: 13px; text-align: left; background: none; border: none; cursor: pointer; font-weight: 500; color: #333; }
+        .dropdown-menu button:hover { background-color: #f8f9fa; }
+        .dropdown-menu button.opt-delete { color: #dc3545; border-top: 1px solid #f1f3f5; }
+
         #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; width: 100%; border: none; padding: 10px; border-radius: 8px; cursor: pointer;}
     </style>
 </head>
-<body>
+<body onclick="tutupSemuaDropdown(event)">
 
 <div class="container">
     <h2>Pembukuan Trip Ojol</h2>
@@ -244,12 +252,10 @@
 
         if (layanan === 'standard') {
             net = nilaiInput;
-            // Menghitung perkiraan nilai gross, lalu dibulatkan ke ratusan bawah agar konsisten dengan hitungan Grab
             let hitungGrossAwal = net * (100 / 92);
             gross = Math.floor(hitungGrossAwal / 100) * 100;
             potongan = gross - net;
         } else {
-            // Untuk layanan hemat, argo diinput langsung sebagai gross kotor
             gross = nilaiInput;
             potongan = 0; 
             net = gross;
@@ -281,6 +287,18 @@
         inputArgo.value = '';
         inputArgo.focus();
         gantiTampilan('hari');
+    }
+
+    // Fungsi Pengendali Dropdown Aksi (Gear)
+    function toggleDropdown(event, idUnik) {
+        event.stopPropagation();
+        tutupSemuaDropdown();
+        const menu = document.getElementById(`drop-${idUnik}`);
+        if (menu) menu.style.display = "block";
+    }
+
+    function tutupSemuaDropdown() {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = "none");
     }
 
     function editBaris(idUnik) {
@@ -376,7 +394,6 @@
                     if (trip.gross <= 10200 && !polaArgoMinDipotong) {
                         trip.prediksiPotonganItem = 0; 
                     } else {
-                        // Menggunakan pembulatan ratusan ke bawah untuk potongan prediksi per item
                         let hitungPotonganMentah = trip.gross * 0.08;
                         trip.prediksiPotonganItem = Math.floor(hitungPotonganMentah / 100) * 100; 
                     }
@@ -413,9 +430,12 @@
                     <td>Rp ${Math.floor(argoTampil).toLocaleString('id-ID')}</td>
                     <td style="color: #dc3545;">Rp ${Math.floor(potBaris).toLocaleString('id-ID')}</td>
                     <td style="color: #28a745; font-weight: bold;">Rp ${Math.floor(trip.gross - potBaris).toLocaleString('id-ID')}</td>
-                    <td>
-                        <button class="btn-action btn-edit-row" onclick="editBaris(${trip.id})">✏️</button>
-                        <button class="btn-action btn-delete-row" onclick="hapusBaris(${trip.id})">🗑️</button>
+                    <td class="action-cell">
+                        <button class="btn-gear" onclick="toggleDropdown(event, ${trip.id})">⚙️</button>
+                        <div class="dropdown-menu" id="drop-${trip.id}">
+                            <button onclick="editBaris(${trip.id})">Ubah</button>
+                            <button class="opt-delete" onclick="hapusBaris(${trip.id})">Hapus</button>
+                        </div>
                     </td>
                 </tr>`;
             });
