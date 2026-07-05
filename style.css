@@ -2,67 +2,84 @@
    1. WARNA UTAMA & VARIABEL (MODE TERANG)
    ========================================== */
 :root {
-    --bg-body: #f8f9fa;
+    --bg-body: #f4f6f8;
     --bg-container: #ffffff;
-    --text-main: #212529;
-    --text-sub: #495057;
-    --border-color: #dee2e6;
-    --bg-input: #ffffff;
+    --text-main: #2b2f33;
+    --text-sub: #6c757d;
+    --border-color: #e2e8f0;
+    --bg-input: #f8fafc;
     
-    /* Komponen Spesifik */
-    --bg-accordion: #f1f3f5;
-    --bg-accordion-toggle: #e9ecef;
-    --bg-summary: #f8f9fa;
-    --border-summary: #e9ecef;
-    --bg-tab-inactive: #e9ecef;
-    --bg-table-th: #f1f3f5;
+    /* Komponen */
+    --bg-accordion: #f1f5f9;
+    --bg-accordion-toggle: #e2e8f0;
+    --bg-summary: #f8fafc;
+    --border-summary: #e2e8f0;
+    --bg-tab-inactive: #e2e8f0;
+    --bg-table-th: #f1f5f9;
     
-    /* Notifikasi & Box */
-    --bg-hemat-box: #fff3e0;
-    --border-hemat-box: #ffe0b2;
-    --text-hemat-box: #d35400;
-    --bg-suggestion: #e3f2fd;
-    --border-suggestion: #90caf9;
-    --text-suggestion: #0d47a1;
-    --title-suggestion: #1565c0;
+    /* Box Informasi & Saran (Dibuat Kalem) */
+    --bg-hemat-box: #fff9db;
+    --border-hemat-box: #ffe066;
+    --text-hemat-box: #f08c00;
+    --bg-suggestion: #e7f5ff;
+    --border-suggestion: #a5d8ff;
+    --text-suggestion: #1c7ed6;
+    --title-suggestion: #1971c2;
 
-    /* Warna Identitas Tetap */
+    /* Warna Aksen */
     --brand-grab: #00b14f;
     --brand-grab-hover: #009643;
-    --color-net: #28a745;
-    --color-potongan: #dc3545;
-    --color-standard: #007bff;
-    --color-nav: #0288d1;
+    --color-net: #0f9d58;
+    --color-potongan: #d93025;
+    --color-standard: #1a73e8;
+    --color-nav: #4a5568;
+    
+    /* Tombol Pengaturan (Dibuat Senada) */
+    --btn-secondary: #fff;
+    --btn-secondary-text: #4a5568;
+    --btn-secondary-border: #cbd5e1;
 }
 
 /* ==========================================
-   2. OTOMATIS SWAP WARNA (MODE GELAP)
+   2. OTOMATIS SWAP WARNA (MODE GELAP ADEM)
    ========================================== */
 @media (prefers-color-scheme: dark) {
     :root {
-        --bg-body: #121212;
-        --bg-container: #1e1e1e;
-        --text-main: #f1f3f5;
-        --text-sub: #ced4da;
-        --border-color: #333333;
-        --bg-input: #2d2d2d;
+        --bg-body: #121214;
+        --bg-container: #1a1a1e;
+        --text-main: #e2e8f0;
+        --text-sub: #94a3b8;
+        --border-color: #2d2d34;
+        --bg-input: #222227;
         
-        /* Komponen Spesifik */
-        --bg-accordion: #252525;
-        --bg-accordion-toggle: #2d2d2d;
-        --bg-summary: #252525;
-        --border-summary: #333333;
-        --bg-tab-inactive: #2d2d2d;
-        --bg-table-th: #2d2d2d;
+        /* Komponen */
+        --bg-accordion: #222227;
+        --bg-accordion-toggle: #2d2d34;
+        --bg-summary: #222227;
+        --border-summary: #2d2d34;
+        --bg-tab-inactive: #2d2d34;
+        --bg-table-th: #222227;
         
-        /* Notifikasi & Box (Disesuaikan agar tidak silau) */
-        --bg-hemat-box: #2c1e11;
-        --border-hemat-box: #5c3e1e;
-        --text-hemat-box: #ffb74d;
-        --bg-suggestion: #112233;
-        --border-suggestion: #1e3d5c;
-        --text-suggestion: #90caf9;
-        --title-suggestion: #64b5f6;
+        /* Box Informasi & Saran (Latar belakang gelap redup, teks pastel) */
+        --bg-hemat-box: #1e1b15;
+        --border-hemat-box: #3c3220;
+        --text-hemat-box: #ffd085;
+        --bg-suggestion: #161b22;
+        --border-suggestion: #21262d;
+        --text-suggestion: #adc6ff;
+        --title-suggestion: #58a6ff;
+
+        /* Warna Status Lembut (Pastel agar tidak silau) */
+        --brand-grab: #00b14f;
+        --color-net: #81c784;       /* Hijau pastel adem */
+        --color-potongan: #e57373;  /* Merah pastel soft */
+        --color-standard: #64b5f6;  /* Biru pastel soft */
+        --color-nav: #4a5568;
+        
+        /* Tombol Pengaturan (Gelap Senada) */
+        --btn-secondary: #2d2d34;
+        --btn-secondary-text: #cbd5e1;
+        --btn-secondary-border: #3f3f46;
     }
 }
 
@@ -70,7 +87,7 @@
    3. ATURAN GAYA (STYLING CORE)
    ========================================== */
 body { 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
     margin: 12px; 
     background-color: var(--bg-body); 
     color: var(--text-main); 
@@ -82,14 +99,14 @@ body {
     background: var(--bg-container); 
     padding: 16px; 
     border-radius: 12px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
 }
 h2 { 
     text-align: center; 
     color: var(--brand-grab); 
     margin: 5px 0 15px 0; 
-    font-size: 22px; 
-    font-weight: 800; 
+    font-size: 20px; 
+    font-weight: 700; 
 }
 .form-group { 
     margin-bottom: 14px; 
@@ -97,7 +114,7 @@ h2 {
 label { 
     display: block; 
     margin-bottom: 6px; 
-    font-weight: 700; 
+    font-weight: 600; 
     font-size: 13px; 
     color: var(--text-sub); 
 }
@@ -107,14 +124,13 @@ input[type="number"], input[type="date"], select {
     border: 1px solid var(--border-color); 
     border-radius: 8px; 
     box-sizing: border-box; 
-    font-size: 16px; 
+    font-size: 15px; 
     background-color: var(--bg-input); 
     color: var(--text-main); 
 }
 input:focus, select:focus { 
     border-color: var(--brand-grab); 
     outline: none; 
-    box-shadow: 0 0 0 3px rgba(0,177,79,0.2); 
 }
 .date-nav { 
     display: flex; 
@@ -125,11 +141,11 @@ input:focus, select:focus {
     width: auto; 
     flex: 1; 
     padding: 12px; 
-    background-color: var(--color-nav); 
+    background-color: var(--btn-secondary); 
+    border: 1px solid var(--btn-secondary-border);
     font-weight: bold; 
     margin: 0; 
-    color: white; 
-    border: none; 
+    color: var(--btn-secondary-text); 
     border-radius: 8px; 
     cursor: pointer; 
 }
@@ -148,10 +164,6 @@ button.btn-primary {
     cursor: pointer; 
     margin-bottom: 10px; 
     font-weight: bold; 
-    transition: background 0.2s; 
-}
-button.btn-primary:hover { 
-    background-color: var(--brand-grab-hover); 
 }
 .accordion-section { 
     border: 1px solid var(--border-color); 
@@ -164,7 +176,7 @@ button.btn-primary:hover {
     background: var(--bg-accordion-toggle); 
     padding: 10px; 
     font-size: 13px; 
-    font-weight: bold; 
+    font-weight: 600; 
     cursor: pointer; 
     text-align: center; 
     color: var(--text-sub); 
@@ -179,6 +191,8 @@ button.btn-primary:hover {
     border-top: 1px solid var(--border-color); 
     background: var(--bg-container); 
 }
+
+/* Mengubah Tombol Pelangi Menjadi Monokrom / Senada */
 .backup-zone { 
     display: flex; 
     flex-direction: column; 
@@ -190,18 +204,20 @@ button.btn-primary:hover {
 }
 .backup-zone button { 
     flex: 1; 
-    padding: 8px; 
+    padding: 10px; 
     font-size: 12px; 
-    border: none; 
+    border: 1px solid var(--btn-secondary-border); 
     border-radius: 6px; 
-    color: white; 
+    background-color: var(--btn-secondary);
+    color: var(--btn-secondary-text); 
     cursor: pointer; 
-    font-weight: bold; 
+    font-weight: 600; 
 }
-.btn-backup { background-color: #00796b; }
-.btn-restore { background-color: #7b1fa2; }
-.btn-download { background-color: #1565c0; }
-.btn-reset { background-color: #e53935; }
+.backup-zone button.btn-reset { 
+    background-color: transparent;
+    color: var(--color-potongan);
+    border: 1px dashed var(--color-potongan);
+}
 
 .summary-box { 
     margin-top: 15px; 
@@ -212,12 +228,11 @@ button.btn-primary:hover {
 }
 .summary-box h3 { 
     margin: 0 0 10px 0; 
-    font-size: 15px; 
+    font-size: 13px; 
     color: var(--text-sub); 
     border-bottom: 2px solid var(--brand-grab); 
     padding-bottom: 4px; 
     text-transform: uppercase; 
-    letter-spacing: 0.5px; 
 }
 .summary-box p { 
     margin: 8px 0; 
@@ -226,9 +241,9 @@ button.btn-primary:hover {
     justify-content: space-between; 
     align-items: center; 
 }
-.bold { font-weight: 700; color: var(--text-main); font-size: 15px; }
-.red-bold { font-weight: 700; color: var(--color-potongan); }
-.green-bold { font-weight: 800; color: var(--color-net); font-size: 18px; }
+.bold { font-weight: 600; color: var(--text-main); }
+.red-bold { font-weight: 600; color: var(--color-potongan); }
+.green-bold { font-weight: 700; color: var(--color-net); font-size: 18px; }
 
 .potongan-section { 
     border-top: 1px dashed var(--border-color); 
@@ -244,8 +259,6 @@ button.btn-primary:hover {
 }
 .potongan-hemat-box label { 
     color: var(--text-hemat-box); 
-    font-size: 13px; 
-    margin-bottom: 4px; 
 }
 .potongan-hemat-box input { 
     padding: 8px; 
@@ -259,19 +272,13 @@ button.btn-primary:hover {
     background-color: var(--bg-suggestion); 
     border-radius: 8px; 
     border: 1px solid var(--border-suggestion); 
-    font-size: 13.5px; 
+    font-size: 13px; 
     line-height: 1.5; 
     color: var(--text-suggestion); 
 }
 .suggestion-title { 
     font-weight: bold; 
-    font-size: 14px; 
-    display: flex; 
-    align-items: center; 
-    gap: 6px; 
-    margin-bottom: 6px; 
     color: var(--title-suggestion); 
-    text-transform: uppercase; 
 }
 .tabs { 
     display: flex; 
@@ -289,7 +296,7 @@ button.btn-primary:hover {
     border: none; 
     border-radius: 6px; 
     cursor: pointer; 
-    font-weight: bold;
+    font-weight: 600;
 }
 .tab-btn.active { 
     background-color: var(--brand-grab); 
@@ -299,43 +306,46 @@ table {
     width: 100%; 
     border-collapse: collapse; 
     margin-top: 15px; 
-    font-size: 14px; 
+    font-size: 13.5px; 
     background: var(--bg-container); 
     border: 1px solid var(--border-color); 
 }
 th, td { 
     border: 1px solid var(--border-color); 
-    padding: 10px 6px; 
+    padding: 10px 4px; 
     text-align: center; 
-    vertical-align: middle; 
 }
 th { 
     background-color: var(--bg-table-th); 
     color: var(--text-sub); 
-    font-weight: 700; 
+    font-weight: 600; 
 }
+
+/* Mengubah Badge Layanan Menjadi Desain Lembut */
 .badge { 
-    padding: 4px 8px; 
-    border-radius: 6px; 
-    font-size: 12px; 
-    font-weight: bold; 
-    color: white; 
+    padding: 4px 6px; 
+    border-radius: 4px; 
+    font-size: 11.5px; 
+    font-weight: 600; 
     display: inline-block; 
 }
-.bg-hemat { background-color: var(--color-net); }
-.bg-standard { background-color: var(--color-standard); }
-.action-cell { position: relative; }
+.badge.bg-standard { 
+    background-color: rgba(100, 181, 246, 0.15); 
+    color: var(--color-standard); 
+    border: 1px solid rgba(100, 181, 246, 0.3);
+}
+.badge.bg-hemat { 
+    background-color: rgba(129, 199, 132, 0.15); 
+    color: var(--color-net); 
+    border: 1px solid rgba(129, 199, 132, 0.3);
+}
+
 .btn-gear { 
     background: none; 
     border: none; 
-    font-size: 16px; 
+    font-size: 15px; 
     cursor: pointer; 
-    padding: 6px; 
-    border-radius: 4px; 
     color: var(--text-sub); 
-}
-.btn-gear:hover { 
-    background-color: var(--bg-table-th); 
 }
 .dropdown-menu { 
     display: none; 
@@ -345,29 +355,20 @@ th {
     background: var(--bg-container); 
     border: 1px solid var(--border-color); 
     border-radius: 6px; 
-    box-shadow: 0 3px 10px rgba(0,0,0,0.3); 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
     z-index: 100; 
-    min-width: 80px; 
-    overflow: hidden; 
 }
 .dropdown-menu button { 
     display: block; 
     width: 100%; 
-    padding: 10px 12px; 
+    padding: 10px 16px; 
     font-size: 13px; 
-    text-align: left; 
     background: none; 
     border: none; 
-    cursor: pointer; 
-    font-weight: 500; 
     color: var(--text-main); 
-}
-.dropdown-menu button:hover { 
-    background-color: var(--bg-table-th); 
 }
 .dropdown-menu button.opt-delete { 
     color: var(--color-potongan); 
-    border-top: 1px solid var(--border-color); 
 }
 #installBtn { 
     display: none; 
@@ -379,5 +380,4 @@ th {
     border: none; 
     padding: 10px; 
     border-radius: 8px; 
-    cursor: pointer;
 }
