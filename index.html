@@ -201,7 +201,6 @@
         const label = document.getElementById('labelArgo');
         const input = document.getElementById('argoInput');
         
-        // DIBUAT SEDERHANA: Semua input mengacu pada nominal yang terlihat di HP saat trip selesai
         if (layanan === 'standard') {
             label.innerText = "Masukkan Uang Masuk Dompet / Net (Rp):";
             input.placeholder = "Contoh: 11200";
@@ -245,9 +244,12 @@
 
         if (layanan === 'standard') {
             net = nilaiInput;
-            gross = Math.round(net * (100 / 92)); 
+            // Menghitung perkiraan nilai gross, lalu dibulatkan ke ratusan bawah agar konsisten dengan hitungan Grab
+            let hitungGrossAwal = net * (100 / 92);
+            gross = Math.floor(hitungGrossAwal / 100) * 100;
             potongan = gross - net;
         } else {
+            // Untuk layanan hemat, argo diinput langsung sebagai gross kotor
             gross = nilaiInput;
             potongan = 0; 
             net = gross;
@@ -267,7 +269,7 @@
                 id: Date.now() + Math.random(),
                 tanggal: inputTanggal,
                 layanan,
-                level_driver: levelSaatIni, // Data level direkam per baris untuk data train CSV
+                level_driver: levelSaatIni,
                 gross,
                 potongan,
                 net
@@ -359,7 +361,6 @@
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
         const levelDriver = document.getElementById('levelDriverInput').value;
         let polaArgoMinDipotong = databasePolaLevel[levelDriver]?.argoMinDipotong;
-        let totalSmp = databasePolaLevel[levelDriver]?.totalSampelHari || 0;
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
@@ -375,7 +376,9 @@
                     if (trip.gross <= 10200 && !polaArgoMinDipotong) {
                         trip.prediksiPotonganItem = 0; 
                     } else {
-                        trip.prediksiPotonganItem = Math.floor(trip.gross * 0.08); 
+                        // Menggunakan pembulatan ratusan ke bawah untuk potongan prediksi per item
+                        let hitungPotonganMentah = trip.gross * 0.08;
+                        trip.prediksiPotonganItem = Math.floor(hitungPotonganMentah / 100) * 100; 
                     }
                     prediksiPotonganHematOtomatis += trip.prediksiPotonganItem;
                 }
@@ -407,9 +410,9 @@
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td>${lencanaLayanan}</td>
-                    <td>Rp ${Math.round(argoTampil).toLocaleString('id-ID')}</td>
-                    <td style="color: #dc3545;">Rp ${Math.round(potBaris).toLocaleString('id-ID')}</td>
-                    <td style="color: #28a745; font-weight: bold;">Rp ${Math.round(trip.gross - potBaris).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.floor(argoTampil).toLocaleString('id-ID')}</td>
+                    <td style="color: #dc3545;">Rp ${Math.floor(potBaris).toLocaleString('id-ID')}</td>
+                    <td style="color: #28a745; font-weight: bold;">Rp ${Math.floor(trip.gross - potBaris).toLocaleString('id-ID')}</td>
                     <td>
                         <button class="btn-action btn-edit-row" onclick="editBaris(${trip.id})">✏️</button>
                         <button class="btn-action btn-delete-row" onclick="hapusBaris(${trip.id})">🗑️</button>
@@ -423,18 +426,14 @@
             let labelHematStatus = potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0 ? " (Asli)" : " (Prediksi)";
             totalPotonganHemat = potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0 ? potonganHematManual[tanggalTerpilih] : prediksiPotonganHematOtomatis;
             
-            let totalGrossHematHariIni = dataHariIni.filter(t => t.layanan === 'hemat').reduce((sum, t) => sum + t.gross, 0);
-            let persenHematTeks = totalGrossHematHariIni > 0 ? ` (${((totalPotonganHemat / totalGrossHematHariIni) * 100).toFixed(1)}%)` : " (0%)";
-
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotonganKombinasi).toLocaleString('id-ID')}`;
 
         } else {
-            // Tampilan Mingguan & Bulanan
             boxPotongan.style.display = "none"; 
             if (modeTampilan === 'minggu') {
                 header.innerHTML = `<th>Senin</th><th>Order</th><th>Kotor (Gross)</th><th>Potongan</th><th>Uang Bersih (Net)</th>`;
@@ -454,7 +453,7 @@
                     let k = kelompokMingguan[minggu];
                     let totalPotRow = k.potStd + k.potHmt;
                     totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
-                    tbody.innerHTML += `<tr><td>${minggu}</td><td>${k.order}</td><td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td><td style="color: #dc3545;">Rp ${Math.round(totalPotRow).toLocaleString('id-ID')}</td><td style="color: #28a745; font-weight: bold;">Rp ${Math.round(k.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>${minggu}</td><td>${k.order}</td><td>Rp ${Math.floor(k.gross).toLocaleString('id-ID')}</td><td style="color: #dc3545;">Rp ${Math.floor(totalPotRow).toLocaleString('id-ID')}</td><td style="color: #28a745; font-weight: bold;">Rp ${Math.floor(k.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
                 });
             } else if (modeTampilan === 'bulan') {
                 header.innerHTML = `<th>Bulan</th><th>Order</th><th>Kotor (Gross)</th><th>Potongan</th><th>Uang Bersih (Net)</th>`;
@@ -474,18 +473,18 @@
                     let b = kelompokBulanan[bln];
                     let totalPotRow = b.potStd + b.potHmt;
                     totalGross += b.gross; totalPotonganStandard += b.potStd; totalPotonganHemat += b.potHmt; totalOrder += b.order;
-                    tbody.innerHTML += `<tr><td>${bln}</td><td>${b.order}</td><td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td><td style="color: #dc3545;">Rp ${Math.round(totalPotRow).toLocaleString('id-ID')}</td><td style="color: #28a745; font-weight: bold;">Rp ${Math.round(b.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>${bln}</td><td>${b.order}</td><td>Rp ${Math.floor(b.gross).toLocaleString('id-ID')}</td><td style="color: #dc3545;">Rp ${Math.floor(totalPotRow).toLocaleString('id-ID')}</td><td style="color: #28a745; font-weight: bold;">Rp ${Math.floor(b.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
                 });
             }
             let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotKombinasiSeluruh;
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotKombinasiSeluruh).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotKombinasiSeluruh).toLocaleString('id-ID')}`;
         }
         document.getElementById('totalOrder').innerText = totalOrder;
-        document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
-        document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
+        document.getElementById('sumGross').innerText = `Rp ${Math.floor(totalGross).toLocaleString('id-ID')}`;
+        document.getElementById('sumNet').innerText = `Rp ${Math.floor(totalNet).toLocaleString('id-ID')}`;
     }
 
     function exportDataKeJSON() {
@@ -535,20 +534,13 @@
         }
     }
 
-    // ==========================================
-    // DATA TRAIN READY: STRUKTUR DATA CSV REKOR BARU
-    // ==========================================
     function downloadCSV() {
-        // Kolom dirapikan agar siap dibaca Python/Google Sheets untuk data train
         let csv = "ID_Trip,Tanggal,Layanan,Level_Driver,Argo_Kotor_Gross,Potongan_Aplikasi,Uang_Bersih_Net,Potongan_Manual_Harian\n";
-        
         masterData.forEach(t => { 
-            // Ambil input potongan manual harian untuk dicocokkan sebagai label data train
             let potManualHariItu = potonganHematManual[t.tanggal] || 0;
             let lvl = t.level_driver || "tidak_terekam";
             csv += `${t.id},${t.tanggal},${t.layanan},${lvl},${t.gross},${t.potongan},${t.net},${potManualHariItu}\n`; 
         });
-        
         let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         let a = document.createElement("a"); 
         a.href = URL.createObjectURL(blob);
