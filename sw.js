@@ -2,6 +2,7 @@ const CACHE_NAME = 'trip-ojol-v1';
 const ASSETS = [
   './',
   './index.html',
+  './style.css',
   './manifest.json'
 ];
 
