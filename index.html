@@ -6,7 +6,6 @@
     <title>Pembukuan Trip Ojol</title>
     <meta name="theme-color" content="#00b14f">
     <link rel="manifest" href="manifest.json">
-    <!-- PANGGIL FILE CSS DISINI -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body onclick="tutupSemuaDropdown(event)">
@@ -77,10 +76,12 @@
         <div class="potongan-section">
             <p>Potongan Langsung Standard (8%): <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
             <p>Potongan Esok Hari Hemat: <span id="sumPotonganHemat" class="red-bold">Rp 0</span></p>
-            <p style="border-top: 1px dashed #ced4da; padding-top: 6px; font-weight: bold;">Total Potongan Komisi: <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
+            <!-- PERBAIKAN: Menggunakan border variabel CSS agar tidak silau di mode gelap -->
+            <p style="border-top: 1px dashed var(--border-color); padding-top: 6px; font-weight: bold;">Total Potongan Komisi: <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
         </div>
 
-        <p style="margin-top: 10px; border-top: 1px solid #ced4da; padding-top: 8px;">Uang Bersih Dompet (Net): <span id="sumNet" class="green-bold">Rp 0</span></p>
+        <!-- PERBAIKAN: Menggunakan border variabel CSS agar serasi -->
+        <p style="margin-top: 10px; border-top: 1px solid var(--border-color); padding-top: 8px;">Uang Bersih Dompet (Net): <span id="sumNet" class="green-bold">Rp 0</span></p>
 
         <div class="potongan-hemat-box" id="boxPotonganAsliHemat">
             <label for="potonganAsliInput"><b>Potongan Asli Hemat Esok Hari (Rp):</b><br><small id="subTextPrediksi">*Lihat menu dompet 'Deduction' besok pagi lalu isi disini</small></label>
