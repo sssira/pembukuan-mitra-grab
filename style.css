@@ -1,383 +1,446 @@
 /* ==========================================
-   1. WARNA UTAMA & VARIABEL (MODE TERANG)
+   DASHBOARD UI SPECIFICATION (MODERN & CLEAN)
    ========================================== */
 :root {
-    --bg-body: #f4f6f8;
-    --bg-container: #ffffff;
-    --text-main: #2b2f33;
-    --text-sub: #6c757d;
-    --border-color: #e2e8f0;
-    --bg-input: #f8fafc;
+    --bg-app: #0e0e10;
+    --bg-surface: #18181c;
+    --bg-surface-elevated: #232329;
+    --border-subtle: rgba(255, 255, 255, 0.04);
     
-    /* Komponen */
-    --bg-accordion: #f1f5f9;
-    --bg-accordion-toggle: #e2e8f0;
-    --bg-summary: #f8fafc;
-    --border-summary: #e2e8f0;
-    --bg-tab-inactive: #e2e8f0;
-    --bg-table-th: #f1f5f9;
+    /* Typography Colors */
+    --text-primary: #f3f4f6;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
     
-    /* Box Informasi & Saran (Dibuat Kalem) */
-    --bg-hemat-box: #fff9db;
-    --border-hemat-box: #ffe066;
-    --text-hemat-box: #f08c00;
-    --bg-suggestion: #e7f5ff;
-    --border-suggestion: #a5d8ff;
-    --text-suggestion: #1c7ed6;
-    --title-suggestion: #1971c2;
-
-    /* Warna Aksen */
-    --brand-grab: #00b14f;
-    --brand-grab-hover: #009643;
-    --color-net: #0f9d58;
-    --color-potongan: #d93025;
-    --color-standard: #1a73e8;
-    --color-nav: #4a5568;
-    
-    /* Tombol Pengaturan (Dibuat Senada) */
-    --btn-secondary: #fff;
-    --btn-secondary-text: #4a5568;
-    --btn-secondary-border: #cbd5e1;
+    /* Semantic Actions */
+    --color-grab: #00b14f;
+    --color-grab-bg: rgba(0, 177, 79, 0.1);
+    --color-net: #10b981;
+    --color-net-bg: rgba(16, 185, 129, 0.08);
+    --color-potongan: #f43f5e;
+    --color-potongan-bg: rgba(244, 63, 94, 0.08);
+    --color-standard: #3b82f6;
+    --color-standard-bg: rgba(59, 130, 246, 0.08);
+    --color-warning: #f59e0b;
+    --color-warning-bg: rgba(245, 158, 11, 0.06);
 }
 
-/* ==========================================
-   2. OTOMATIS SWAP WARNA (MODE GELAP ADEM)
-   ========================================== */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-body: #121214;
-        --bg-container: #1a1a1e;
-        --text-main: #e2e8f0;
-        --text-sub: #94a3b8;
-        --border-color: #2d2d34;
-        --bg-input: #222227;
-        
-        /* Komponen */
-        --bg-accordion: #222227;
-        --bg-accordion-toggle: #2d2d34;
-        --bg-summary: #222227;
-        --border-summary: #2d2d34;
-        --bg-tab-inactive: #2d2d34;
-        --bg-table-th: #222227;
-        
-        /* Box Informasi & Saran (Latar belakang gelap redup, teks pastel) */
-        --bg-hemat-box: #1e1b15;
-        --border-hemat-box: #3c3220;
-        --text-hemat-box: #ffd085;
-        --bg-suggestion: #161b22;
-        --border-suggestion: #21262d;
-        --text-suggestion: #adc6ff;
-        --title-suggestion: #58a6ff;
-
-        /* Warna Status Lembut (Pastel agar tidak silau) */
-        --brand-grab: #00b14f;
-        --color-net: #81c784;       /* Hijau pastel adem */
-        --color-potongan: #e57373;  /* Merah pastel soft */
-        --color-standard: #64b5f6;  /* Biru pastel soft */
-        --color-nav: #4a5568;
-        
-        /* Tombol Pengaturan (Gelap Senada) */
-        --btn-secondary: #2d2d34;
-        --btn-secondary-text: #cbd5e1;
-        --btn-secondary-border: #3f3f46;
-    }
+/* Base Body Configuration */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* ==========================================
-   3. ATURAN GAYA (STYLING CORE)
-   ========================================== */
-body { 
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-    margin: 12px; 
-    background-color: var(--bg-body); 
-    color: var(--text-main); 
-    transition: background-color 0.3s, color 0.3s;
-}
-.container { 
-    max-width: 480px; 
-    margin: auto; 
-    background: var(--bg-container); 
-    padding: 16px; 
-    border-radius: 12px; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2); 
-}
-h2 { 
-    text-align: center; 
-    color: var(--brand-grab); 
-    margin: 5px 0 15px 0; 
-    font-size: 20px; 
-    font-weight: 700; 
-}
-.form-group { 
-    margin-bottom: 14px; 
-}
-label { 
-    display: block; 
-    margin-bottom: 6px; 
-    font-weight: 600; 
-    font-size: 13px; 
-    color: var(--text-sub); 
-}
-input[type="number"], input[type="date"], select { 
-    width: 100%; 
-    padding: 12px; 
-    border: 1px solid var(--border-color); 
-    border-radius: 8px; 
-    box-sizing: border-box; 
-    font-size: 15px; 
-    background-color: var(--bg-input); 
-    color: var(--text-main); 
-}
-input:focus, select:focus { 
-    border-color: var(--brand-grab); 
-    outline: none; 
-}
-.date-nav { 
-    display: flex; 
-    gap: 6px; 
-    align-items: center; 
-}
-.date-nav button { 
-    width: auto; 
-    flex: 1; 
-    padding: 12px; 
-    background-color: var(--btn-secondary); 
-    border: 1px solid var(--btn-secondary-border);
-    font-weight: bold; 
-    margin: 0; 
-    color: var(--btn-secondary-text); 
-    border-radius: 8px; 
-    cursor: pointer; 
-}
-.date-nav input[type="date"] { 
-    flex: 3; 
-    text-align: center; 
-}
-button.btn-primary { 
-    width: 100%; 
-    padding: 14px; 
-    background-color: var(--brand-grab); 
-    color: white; 
-    border: none; 
-    border-radius: 8px; 
-    font-size: 16px; 
-    cursor: pointer; 
-    margin-bottom: 10px; 
-    font-weight: bold; 
-}
-.accordion-section { 
-    border: 1px solid var(--border-color); 
-    border-radius: 8px; 
-    margin-bottom: 15px; 
-    background: var(--bg-accordion); 
-    overflow: hidden; 
-}
-.accordion-toggle { 
-    background: var(--bg-accordion-toggle); 
-    padding: 10px; 
-    font-size: 13px; 
-    font-weight: 600; 
-    cursor: pointer; 
-    text-align: center; 
-    color: var(--text-sub); 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    gap: 5px; 
-}
-.accordion-content { 
-    display: none; 
-    padding: 12px; 
-    border-top: 1px solid var(--border-color); 
-    background: var(--bg-container); 
+/* Wrapper Dashboard Utama */
+.dashboard-wrapper {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
-/* Mengubah Tombol Pelangi Menjadi Monokrom / Senada */
-.backup-zone { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 6px; 
+/* Header UI minimalis */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
 }
-.backup-zone-row { 
-    display: flex; 
-    gap: 6px; 
+.header-user h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
 }
-.backup-zone button { 
-    flex: 1; 
-    padding: 10px; 
-    font-size: 12px; 
-    border: 1px solid var(--btn-secondary-border); 
-    border-radius: 6px; 
-    background-color: var(--btn-secondary);
-    color: var(--btn-secondary-text); 
-    cursor: pointer; 
-    font-weight: 600; 
+.header-user p {
+    margin: 2px 0 0 0;
+    font-size: 13px;
+    color: var(--text-secondary);
 }
-.backup-zone button.btn-reset { 
-    background-color: transparent;
-    color: var(--color-potongan);
-    border: 1px dashed var(--color-potongan);
+.btn-install-modern {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--color-warning);
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
 }
 
-.summary-box { 
-    margin-top: 15px; 
-    padding: 14px; 
-    background-color: var(--bg-summary); 
-    border-radius: 8px; 
-    border: 1px solid var(--border-summary); 
+/* Grid Kartu Statistik (Efek Floating Card & Elegan) */
+.grid-stats {
+    display: grid;
+    grid-template-columns: 2fr 1.3fr 1fr;
+    gap: 10px;
 }
-.summary-box h3 { 
-    margin: 0 0 10px 0; 
-    font-size: 13px; 
-    color: var(--text-sub); 
-    border-bottom: 2px solid var(--brand-grab); 
-    padding-bottom: 4px; 
-    text-transform: uppercase; 
+.stat-card {
+    background: var(--bg-surface);
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
-.summary-box p { 
-    margin: 8px 0; 
-    font-size: 14px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
+.stat-card.card-net {
+    background: linear-gradient(135deg, #111827 0%, #062013 100%);
+    border: 1px solid rgba(16, 185, 129, 0.15);
 }
-.bold { font-weight: 600; color: var(--text-main); }
-.red-bold { font-weight: 600; color: var(--color-potongan); }
-.green-bold { font-weight: 700; color: var(--color-net); font-size: 18px; }
+.stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-net);
+    margin-top: 8px;
+}
+.stat-value-sub {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-top: 12px;
+}
 
-.potongan-section { 
-    border-top: 1px dashed var(--border-color); 
-    margin-top: 8px; 
-    padding-top: 8px; 
+/* Area Detail Komisi Terlipat Bersih */
+.details-collapse {
+    background: var(--bg-surface);
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
-.potongan-hemat-box { 
-    background-color: var(--bg-hemat-box); 
-    padding: 12px; 
-    border: 1px solid var(--border-hemat-box); 
-    border-radius: 8px; 
-    margin-top: 10px; 
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    color: var(--text-secondary);
 }
-.potongan-hemat-box label { 
-    color: var(--text-hemat-box); 
+.total-divider {
+    border-top: 1px dashed var(--bg-surface-elevated);
+    padding-top: 8px;
+    margin-top: 2px;
 }
-.potongan-hemat-box input { 
-    padding: 8px; 
-    font-size: 15px; 
-    margin-top: 4px; 
-    border: 1px solid var(--border-hemat-box); 
+
+/* Tab Kontrol Modern (Sistem Pil Oval Capsul) */
+.tabs-modern {
+    display: flex;
+    background: var(--bg-surface);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border-subtle);
 }
-.suggestion-box { 
-    margin-top: 15px; 
-    padding: 12px 14px; 
-    background-color: var(--bg-suggestion); 
-    border-radius: 8px; 
-    border: 1px solid var(--border-suggestion); 
-    font-size: 13px; 
-    line-height: 1.5; 
-    color: var(--text-suggestion); 
+.tab-btn-modern {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
 }
-.suggestion-title { 
-    font-weight: bold; 
-    color: var(--title-suggestion); 
+.tab-btn-modern.active {
+    background: var(--bg-surface-elevated);
+    color: var(--text-primary);
 }
-.tabs { 
-    display: flex; 
-    gap: 6px; 
-    margin-bottom: 15px; 
+
+/* Navigasi Tanggal Tanpa Box Kaku */
+.form-group-date {
+    display: flex;
+    justify-content: center;
 }
-.tab-btn { 
-    background-color: var(--bg-tab-inactive); 
-    color: var(--text-sub); 
-    padding: 10px; 
-    font-size: 13px; 
-    margin: 0; 
-    width: auto; 
-    flex: 1; 
-    border: none; 
-    border-radius: 6px; 
-    cursor: pointer; 
+.date-navigator-box {
+    display: flex;
+    align-items: center;
+    background: var(--bg-surface);
+    border-radius: 20px;
+    padding: 2px 8px;
+    border: 1px solid var(--border-subtle);
+}
+.date-navigator-box input[type="date"] {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-align: center;
+    padding: 6px 12px;
+    outline: none;
+}
+.nav-arrow {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* Glassmorphism Input Form & Select Ringan */
+.glass-card {
+    background: var(--bg-surface);
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--border-subtle);
+}
+.form-row-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.input-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.input-box label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.glass-card select, .glass-card input {
+    background: var(--bg-surface-elevated);
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+    width: 100%;
+}
+.glass-card select:focus, .glass-card input:focus {
+    border-color: rgba(0, 177, 79, 0.3);
+}
+
+/* Tombol Kirim Eksekusi Utama */
+.btn-primary-modern {
+    width: 100%;
+    background: var(--color-grab);
+    color: #fff;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 177, 79, 0.2);
+}
+
+/* Box Input Potongan Asli Esok Hari */
+.glass-card-warning {
+    background: rgba(245, 158, 11, 0.03);
+    border: 1px dashed rgba(245, 158, 11, 0.15);
+    padding: 12px 14px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.warning-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-warning);
+}
+.glass-card-warning input {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 10px;
+    color: var(--text-primary);
+    outline: none;
+}
+
+/* Box Rekomendasi Pendapatan */
+.suggestion-card {
+    background: rgba(59, 130, 246, 0.04);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #adc6ff;
+}
+.suggestion-header {
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #58a6ff;
+}
+
+/* Judul List Riwayat */
+.section-title-container h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin: 10px 0 0 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tabel Riwayat Versi Modern Minim Garis Tebal */
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+}
+.modern-table th, .modern-table td {
+    padding: 12px 6px;
+    font-size: 12.5px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+.modern-table th {
+    background: rgba(255, 255, 255, 0.01);
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+}
+.modern-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Desain Badge Tag Tipis & Bersih */
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 600;
 }
-.tab-btn.active { 
-    background-color: var(--brand-grab); 
-    color: white; 
+.badge.bg-standard {
+    background: var(--color-standard-bg);
+    color: var(--color-standard);
 }
-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    margin-top: 15px; 
-    font-size: 13.5px; 
-    background: var(--bg-container); 
-    border: 1px solid var(--border-color); 
-}
-th, td { 
-    border: 1px solid var(--border-color); 
-    padding: 10px 4px; 
-    text-align: center; 
-}
-th { 
-    background-color: var(--bg-table-th); 
-    color: var(--text-sub); 
-    font-weight: 600; 
+.badge.bg-hemat {
+    background: var(--color-net-bg);
+    color: var(--color-net);
 }
 
-/* Mengubah Badge Layanan Menjadi Desain Lembut */
-.badge { 
-    padding: 4px 6px; 
-    border-radius: 4px; 
-    font-size: 11.5px; 
-    font-weight: 600; 
-    display: inline-block; 
+/* Gear Akses Dropdown & Aksi Per Baris */
+.btn-gear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
 }
-.badge.bg-standard { 
-    background-color: rgba(100, 181, 246, 0.15); 
-    color: var(--color-standard); 
-    border: 1px solid rgba(100, 181, 246, 0.3);
+.action-cell {
+    position: relative;
 }
-.badge.bg-hemat { 
-    background-color: rgba(129, 199, 132, 0.15); 
-    color: var(--color-net); 
-    border: 1px solid rgba(129, 199, 132, 0.3);
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    right: 12px;
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    z-index: 200;
+    min-width: 90px;
+}
+.dropdown-menu button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+}
+.dropdown-menu button.opt-delete {
+    color: var(--color-potongan);
+    border-top: 1px solid rgba(255,255,255,0.03);
 }
 
-.btn-gear { 
-    background: none; 
-    border: none; 
-    font-size: 15px; 
-    cursor: pointer; 
-    color: var(--text-sub); 
+/* Accordion Pengaturan Bawah Rapi */
+.accordion-section-modern {
+    margin-top: 10px;
+    background: var(--bg-surface);
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
 }
-.dropdown-menu { 
-    display: none; 
-    position: absolute; 
-    right: 6px; 
-    top: 34px; 
-    background: var(--bg-container); 
-    border: 1px solid var(--border-color); 
-    border-radius: 6px; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
-    z-index: 100; 
+.accordion-toggle-modern {
+    padding: 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-align: center;
+    cursor: pointer;
 }
-.dropdown-menu button { 
-    display: block; 
-    width: 100%; 
-    padding: 10px 16px; 
-    font-size: 13px; 
-    background: none; 
-    border: none; 
-    color: var(--text-main); 
+.accordion-content-modern {
+    display: none;
+    padding: 14px;
+    background: rgba(0,0,0,0.1);
+    border-top: 1px solid var(--border-subtle);
 }
-.dropdown-menu button.opt-delete { 
-    color: var(--color-potongan); 
+.form-group-select {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
 }
-#installBtn { 
-    display: none; 
-    background-color: #ff9800; 
-    color: black; 
-    font-weight: bold; 
-    margin-bottom: 15px; 
-    width: 100%; 
-    border: none; 
-    padding: 10px; 
-    border-radius: 8px; 
+.form-group-select label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
 }
+.form-group-select select {
+    background: var(--bg-surface-elevated);
+    color: var(--text-primary);
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    outline: none;
+}
+.action-grid-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.action-grid-buttons button {
+    background: var(--bg-surface-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 10px;
+    font-size: 11.5px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.action-grid-buttons button.btn-danger-link {
+    grid-column: span 2;
+    background: transparent;
+    border: 1px dashed rgba(244, 63, 94, 0.2);
+    color: var(--color-potongan);
+}
+
+/* Utility Helpers */
+.font-bold { font-weight: 700; }
+.text-success { color: var(--color-net); }
+.text-danger { color: var(--color-potongan); }
