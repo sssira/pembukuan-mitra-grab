@@ -85,8 +85,10 @@
     <div class="form-group">
         <label for="levelDriverInput">Level Driver Anda:</label>
         <select id="levelDriverInput" onchange="prosesDanTampilkan()">
-            <option value="Jawara">Jawara (Komisi Dasar 8%)</option>
-            <option value="Ksatria/Pejuang">Ksatria / Pejuang (Komisi Dasar 12%)</option>
+            <option value="jawara">1. Jawara</option>
+            <option value="ksatria">2. Ksatria</option>
+            <option value="pejuang">3. Pejuang</option>
+            <option value="anggota">4. Anggota</option>
         </select>
     </div>
 
@@ -221,7 +223,6 @@
         }
 
         if (idDataSedangDiedit !== null) {
-            // Mode Update / Simpan perubahan edit
             masterData = masterData.map(item => {
                 if (item.id === idDataSedangDiedit) {
                     return { ...item, tanggal: inputTanggal, layanan, gross, potongan, net };
@@ -232,7 +233,6 @@
             document.getElementById('btnSubmitTrip').innerText = "Tambah Trip";
             document.getElementById('btnSubmitTrip').style.backgroundColor = "#2e7d32";
         } else {
-            // Mode Tambah data baru biasa
             masterData.push({
                 id: Date.now() + Math.random(),
                 tanggal: inputTanggal,
@@ -288,6 +288,9 @@
         return new Date(date.setDate(diff)).toISOString().slice(0,10);
     }
 
+    // ==========================================
+    // FUNGSI UTAMA BARU DENGAN COCOK POLA (TRAIN DATA)
+    // ==========================================
     function prosesDanTampilkan() {
         const tbody = document.querySelector('#tabelTrip tbody');
         const header = document.getElementById('headerTabel');
@@ -299,51 +302,82 @@
         let totalPotonganStandard = 0, totalPotonganHemat = 0;
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
-        const levelTerdeteksi = document.getElementById('levelDriverInput').value;
-        const rateHemat = levelTerdeteksi === "Jawara" ? 0.08 : 0.12;
+        const levelDriver = document.getElementById('levelDriverInput')?.value || 'jawara';
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
-
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             document.getElementById('judulRingkasan').innerText = `Ringkasan Riwayat: ${tanggalTerpilih}`;
             
             let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
             totalOrder = dataHariIni.length;
 
-            let prediksiPotonganHematOtomatis = 0;
-            let totalGrossHematHariIni = 0;
+            // 1. ANALISIS POLA (TRAIN DATA) BERDASARKAN INPUT ASLI MASA LALU
+            let polaArgoMinDipotong = true; // Default awal jika tidak ada data
+            if (levelDriver === 'jawara') polaArgoMinDipotong = false; 
 
-            dataHariIni.forEach((trip) => {
-                if (trip.layanan === 'hemat') {
-                    totalGrossHematHariIni += trip.gross;
-                    let hitungDasar = (levelTerdeteksi === "Jawara") ? ((trip.gross > 10200) ? Math.floor(trip.gross * 0.08) : 0) : Math.floor(trip.gross * 0.12);
-                    let batasMaks = Math.floor(trip.gross * 0.08);
-                    prediksiPotonganHematOtomatis += Math.min(hitungDasar, batasMaks);
+            let sampelHariLalu = Object.keys(potonganHematManual).filter(tgl => tgl !== tanggalTerpilih);
+            let totalHariValidasi = 0;
+            let hariArgoMinBebasPotongan = 0;
+
+            sampelHariLalu.forEach(tgl => {
+                let tripHematHariItu = masterData.filter(item => item.tanggal === tgl && item.layanan === 'hemat');
+                let hanyaArgoMinimum = tripHematHariItu.length > 0 && tripHematHariItu.every(item => item.gross <= 10200);
+                let potonganAsliHariItu = potonganHematManual[tgl] || 0;
+
+                if (hanyaArgoMinimum) {
+                    totalHariValidasi++;
+                    if (potonganAsliHariItu === 0) {
+                        hariArgoMinBebasPotongan++;
+                    }
                 }
             });
 
+            // Jika > 50% data latih harian menunjukkan argo min bersih dari potongan, sistem akan merespons Rp0
+            if (totalHariValidasi > 0) {
+                polaArgoMinDipotong = (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
+            }
+
+            // 2. HITUNG PREDIKSI TIAP ITEM TRIP
+            let prediksiPotonganHematOtomatis = 0;
+
+            dataHariIni.forEach((trip) => {
+                if (trip.layanan === 'hemat') {
+                    if (trip.gross <= 10200 && !polaArgoMinDipotong) {
+                        trip.prediksiPotonganItem = 0; 
+                    } else {
+                        trip.prediksiPotonganItem = Math.floor(trip.gross * 0.08); 
+                    }
+                    prediksiPotonganHematOtomatis += trip.prediksiPotonganItem;
+                }
+            });
+
+            if (prediksiPotonganHematOtomatis > 0) {
+                prediksiPotonganHematOtomatis = Math.max(0, prediksiPotonganHematOtomatis - 100);
+            }
+
+            // 3. RENDER DATA KE TABEL HARIAN
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
+                
+                let potBaris = 0;
                 if (trip.layanan === 'standard') {
+                    trip.prediksiPotonganItem = trip.potongan;
                     totalPotonganStandard += trip.potongan;
+                    potBaris = trip.potongan;
+                } else {
+                    if (potonganHematManual[tanggalTerpilih] !== undefined) {
+                        let totalManual = potonganHematManual[tanggalTerpilih];
+                        potBaris = prediksiPotonganHematOtomatis > 0 ? 
+                            (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
+                    } else {
+                        potBaris = trip.prediksiPotonganItem;
+                    }
                 }
 
                 let lencanaLayanan = trip.layanan === 'standard' ? 
                     `<span class="badge bg-standard">Standard</span>` : 
                     `<span class="badge bg-hemat">Hemat</span>`;
-
-                let potBaris = 0;
-                if(trip.layanan === 'standard') {
-                    potBaris = trip.potongan;
-                } else {
-                    if (potonganHematManual[tanggalTerpilih]) {
-                        potBaris = potonganHematManual[tanggalTerpilih] / dataHariIni.filter(i => i.layanan === 'hemat').length;
-                    } else {
-                        let hitungDasar = (levelTerdeteksi === "Jawara") ? ((trip.gross > 10200) ? trip.gross * 0.08 - 100/dataHariIni.filter(i => i.layanan === 'hemat').length : 0) : trip.gross * 0.12;
-                        potBaris = Math.min(hitungDasar, trip.gross * 0.08);
-                    }
-                }
 
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
@@ -358,43 +392,30 @@
                 </tr>`;
             });
 
-            if (levelTerdeteksi === "Jawara" && prediksiPotonganHematOtomatis > 0) {
-                prediksiPotonganHematOtomatis = Math.max(0, prediksiPotonganHematOtomatis - 100);
-            }
-
-            inputPlaceholderHemat.placeholder = `Prediksi (${levelTerdeteksi}): Rp ${prediksiPotonganHematOtomatis.toLocaleString('id-ID')}`;
+            // 4. UPDATE UI RINGKASAN DATA
+            let statusSistem = totalHariValidasi > 0 ? `Cerdas (${totalHariValidasi} Data Latih)` : `Prediksi Awal`;
+            inputPlaceholderHemat.placeholder = `Menebak via ${statusSistem}: Rp ${prediksiPotonganHematOtomatis.toLocaleString('id-ID')}`;
             document.getElementById('potonganAsliInput').value = potonganHematManual[tanggalTerpilih] || '';
 
-            let labelHematStatus = "";
-            let persenHematTeks = "";
-
-            if (potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0) {
-                totalPotonganHemat = potonganHematManual[tanggalTerpilih];
-                labelHematStatus = " (Asli)";
-                persenHematTeks = totalGrossHematHariIni > 0 ? ` (${((totalPotonganHemat / totalGrossHematHariIni) * 100).toFixed(2)}%)` : " (0%)";
-            } else {
-                totalPotonganHemat = prediksiPotonganHematOtomatis;
-                labelHematStatus = ` (Prediksi ${levelTerdeteksi})`;
-                persenHematTeks = totalGrossHematHariIni > 0 ? ` (${((totalPotonganHemat / totalGrossHematHariIni) * 100).toFixed(2)}%)` : " (0%)";
-            }
+            let labelHematStatus = potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0 ? " (Asli)" : " (Prediksi)";
+            totalPotonganHemat = potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0 ? potonganHematManual[tanggalTerpilih] : prediksiPotonganHematOtomatis;
+            
+            let totalGrossHematHariIni = dataHariIni.filter(t => t.layanan === 'hemat').reduce((sum, t) => sum + t.gross, 0);
+            let persenHematTeks = totalGrossHematHariIni > 0 ? ` (${((totalPotonganHemat / totalGrossHematHariIni) * 100).toFixed(2)}%)` : " (0%)";
 
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
-            let persenStandardTeks = totalPotonganStandard > 0 ? " (8.00%)" : " (0%)";
-            let persenTotalTeks = (totalGross > 0 && totalPotonganKombinasi > 0) ? ` (${((totalPotonganKombinasi / totalGross) * 100).toFixed(2)}%)` : "";
-
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}${persenStandardTeks}`;
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')} (${totalPotonganStandard > 0 ? '8.00%' : '0%'})`;
             document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}${persenHematTeks}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')}${persenTotalTeks}`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')} (${totalGross > 0 ? ((totalPotonganKombinasi / totalGross) * 100).toFixed(2) : 0}%)`;
 
         } else {
+            // Logika Tab Rekap Mingguan & Bulanan
             boxPotongan.style.display = "none"; 
-
             if (modeTampilan === 'minggu') {
                 header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
                 document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
-
                 let kelompokMingguan = {};
                 masterData.forEach(item => {
                     let senin = getAwalMinggu(item.tanggal);
@@ -403,31 +424,19 @@
                     kelompokMingguan[senin].gross += item.gross;
                     if(item.layanan === 'standard') kelompokMingguan[senin].potStd += item.potongan;
                 });
-
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let senin = getAwalMinggu(tgl);
                     if (kelompokMingguan[senin]) kelompokMingguan[senin].potHmt += potonganHematManual[tgl];
                 });
-
                 Object.keys(kelompokMingguan).sort().reverse().forEach(minggu => {
                     let k = kelompokMingguan[minggu];
                     let totalPotRow = k.potStd + k.potHmt;
-                    let netMinggu = k.gross - totalPotRow;
                     totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
-                    
-                    tbody.innerHTML += `<tr>
-                        <td>${minggu}</td>
-                        <td>${k.order}</td>
-                        <td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Std: Rp ${Math.round(k.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(k.potHmt).toLocaleString('id-ID')}</td>
-                        <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netMinggu).toLocaleString('id-ID')}</td>
-                    </tr>`;
+                    tbody.innerHTML += `<tr><td>${minggu}</td><td>${k.order}</td><td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td><td style="color: #c62828;">Std: Rp ${Math.round(k.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(k.potHmt).toLocaleString('id-ID')}</td><td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(k.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
                 });
-
             } else if (modeTampilan === 'bulan') {
                 header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
                 document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
-
                 let kelompokBulanan = {};
                 masterData.forEach(item => {
                     let bulan = item.tanggal.substring(0, 7);
@@ -436,36 +445,23 @@
                     kelompokBulanan[bulan].gross += item.gross;
                     if(item.layanan === 'standard') kelompokBulanan[bulan].potStd += item.potongan;
                 });
-
                 Object.keys(potonganHematManual).forEach(tgl => {
                     let bulan = tgl.substring(0, 7);
                     if (kelompokBulanan[bulan]) kelompokBulanan[bulan].potHmt += potonganHematManual[tgl];
                 });
-
                 Object.keys(kelompokBulanan).sort().reverse().forEach(bln => {
                     let b = kelompokBulanan[bln];
                     let totalPotRow = b.potStd + b.potHmt;
-                    let netBulan = b.gross - totalPotRow;
                     totalGross += b.gross; totalPotonganStandard += b.potStd; totalPotonganHemat += b.potHmt; totalOrder += b.order;
-                    
-                    tbody.innerHTML += `<tr>
-                        <td>${bln}</td>
-                        <td>${b.order}</td>
-                        <td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td>
-                        <td style="color: #c62828;">Std: Rp ${Math.round(b.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(b.potHmt).toLocaleString('id-ID')}</td>
-                        <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(netBulan).toLocaleString('id-ID')}</td>
-                    </tr>`;
+                    tbody.innerHTML += `<tr><td>${bln}</td><td>${b.order}</td><td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td><td style="color: #c62828;">Std: Rp ${Math.round(b.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(b.potHmt).toLocaleString('id-ID')}</td><td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(b.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
                 });
             }
-
             let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotKombinasiSeluruh;
-
             document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}`;
             document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}`;
             document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotKombinasiSeluruh).toLocaleString('id-ID')}`;
         }
-
         document.getElementById('totalOrder').innerText = totalOrder;
         document.getElementById('sumGross').innerText = `Rp ${Math.round(totalGross).toLocaleString('id-ID')}`;
         document.getElementById('sumNet').innerText = `Rp ${Math.round(totalNet).toLocaleString('id-ID')}`;
@@ -489,7 +485,6 @@
         reader.onload = function(evt) {
             try {
                 let data = JSON.parse(evt.target.result);
-                // Kompatibilitas pembacaan kunci backup lama atau baru
                 let dataTrip = data.masterData || data.riwayatTrip || data;
                 let dataPotongan = data.potonganHematManual || data.potonganManual || {};
 
@@ -501,7 +496,6 @@
                     prosesDanTampilkan();
                     alert("Data berhasil dipulihkan!");
                 } else if (data && typeof data === 'object' && !Array.isArray(data)) {
-                    // Jika backup mentah tanpa pembungkus objek induk
                     if (data.masterData && Array.isArray(data.masterData)) {
                         masterData = data.masterData;
                         potonganHematManual = data.potonganHematManual || {};
