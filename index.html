@@ -6,73 +6,8 @@
     <title>Pembukuan Trip Ojol</title>
     <meta name="theme-color" content="#00b14f">
     <link rel="manifest" href="manifest.json">
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 12px; background-color: #f8f9fa; color: #212529; }
-        .container { max-width: 480px; margin: auto; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        h2 { text-align: center; color: #00b14f; margin: 5px 0 15px 0; font-size: 22px; font-weight: 800; }
-        
-        .form-group { margin-bottom: 14px; }
-        label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 13px; color: #495057; }
-        input[type="number"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #fff; color: #333; }
-        input:focus, select:focus { border-color: #00b14f; outline: none; box-shadow: 0 0 0 3px rgba(0,177,79,0.2); }
-        
-        .date-nav { display: flex; gap: 6px; align-items: center; }
-        .date-nav button { width: auto; flex: 1; padding: 12px; background-color: #0288d1; font-weight: bold; margin: 0; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        .date-nav input[type="date"] { flex: 3; text-align: center; }
-
-        button.btn-primary { width: 100%; padding: 14px; background-color: #00b14f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 10px; font-weight: bold; transition: background 0.2s; }
-        button.btn-primary:hover { background-color: #009643; }
-        
-        .accordion-section { border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 15px; background: #f1f3f5; overflow: hidden; }
-        .accordion-toggle { background: #e9ecef; padding: 10px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; color: #495057; display: flex; justify-content: center; align-items: center; gap: 5px; }
-        .accordion-content { display: none; padding: 12px; border-top: 1px solid #dee2e6; background: #fff; }
-        .backup-zone { display: flex; flex-direction: column; gap: 6px; }
-        .backup-zone-row { display: flex; gap: 6px; }
-        .backup-zone button { flex: 1; padding: 8px; font-size: 12px; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; }
-        .btn-backup { background-color: #00796b; }
-        .btn-restore { background-color: #7b1fa2; }
-        .btn-download { background-color: #1565c0; }
-        .btn-reset { background-color: #e53935; }
-
-        .summary-box { margin-top: 15px; padding: 14px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
-        .summary-box h3 { margin: 0 0 10px 0; font-size: 15px; color: #495057; border-bottom: 2px solid #00b14f; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .summary-box p { margin: 8px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .bold { font-weight: 700; color: #212529; font-size: 15px; }
-        .red-bold { font-weight: 700; color: #dc3545; }
-        .green-bold { font-weight: 800; color: #28a745; font-size: 18px; }
-        
-        .potongan-section { border-top: 1px dashed #dee2e6; margin-top: 8px; padding-top: 8px; }
-        .potongan-hemat-box { background-color: #fff3e0; padding: 12px; border: 1px solid #ffe0b2; border-radius: 8px; margin-top: 10px; }
-        .potongan-hemat-box label { color: #d35400; font-size: 13px; margin-bottom: 4px; }
-        .potongan-hemat-box input { padding: 8px; font-size: 15px; margin-top: 4px; border: 1px solid #ffcc80; }
-
-        /* Style Baru Kotak Rekomendasi Argo */
-        .suggestion-box { margin-top: 15px; padding: 12px 14px; background-color: #e3f2fd; border-radius: 8px; border: 1px solid #90caf9; font-size: 13,5px; line-height: 1.5; color: #0d47a1; }
-        .suggestion-title { font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: #1565c0; text-transform: uppercase; }
-
-        .tabs { display: flex; gap: 6px; margin-bottom: 15px; }
-        .tab-btn { background-color: #e9ecef; color: #495057; padding: 10px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;}
-        .tab-btn.active { background-color: #00b14f; color: white; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; background: white; border: 1px solid #dee2e6; }
-        th, td { border: 1px solid #dee2e6; padding: 10px 6px; text-align: center; vertical-align: middle; }
-        th { background-color: #f1f3f5; color: #495057; font-weight: 700; }
-        
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; color: white; display: inline-block; }
-        .bg-hemat { background-color: #28a745; }
-        .bg-standard { background-color: #007bff; }
-        
-        .action-cell { position: relative; }
-        .btn-gear { background: none; border: none; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 4px; color: #6c757d; }
-        .btn-gear:hover { background-color: #f1f3f5; }
-        
-        .dropdown-menu { display: none; position: absolute; right: 6px; top: 34px; background: white; border: 1px solid #dee2e6; border-radius: 6px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); z-index: 100; min-width: 80px; overflow: hidden; }
-        .dropdown-menu button { display: block; width: 100%; padding: 10px 12px; font-size: 13px; text-align: left; background: none; border: none; cursor: pointer; font-weight: 500; color: #333; }
-        .dropdown-menu button:hover { background-color: #f8f9fa; }
-        .dropdown-menu button.opt-delete { color: #dc3545; border-top: 1px solid #f1f3f5; }
-
-        #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; width: 100%; border: none; padding: 10px; border-radius: 8px; cursor: pointer;}
-    </style>
+    <!-- PANGGIL FILE CSS DISINI -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body onclick="tutupSemuaDropdown(event)">
 
@@ -153,7 +88,6 @@
         </div>
     </div>
 
-    <!-- Kotak Saran Taktis Smart Driver -->
     <div id="boxRekomendasiArgo" class="suggestion-box" style="display: none;">
         <div class="suggestion-title">💡 Rekomendasi Taktis Anti-Boncos</div>
         <div id="isiRekomendasi">Memuat saran performa...</div>
@@ -391,11 +325,10 @@
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
-            boxSaran.style.display = "block"; // Tampilkan kotak saran di mode harian
+            boxSaran.style.display = "block"; 
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             document.getElementById('judulRingkasan').innerText = `Riwayat Tanggal: ${tanggalTerpilih}`;
             
-            // --- LOGIKA GENERATOR SARAN DRIVER (ANTI-BONCOS) ---
             if (levelDriver === 'jawara' || !polaArgoMinDipotong) {
                 isiSaran.innerHTML = `Akun Anda terdeteksi <b>JAWARA</b> (Bebas potongan penyesuaian tarif).<br>` + 
                                      `🎯 <b>Saran Taktik:</b> Prioritaskan sikat habis <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> sebanyak-banyaknya. Ritase cepat, hemat bensin, dan potongan per baris Rp 0 / sangat tipis! Batasi Standard jarak jauh jika area macet.`;
@@ -403,7 +336,6 @@
                 isiSaran.innerHTML = `Akun Anda terdeteksi terkena potongan ekstra pada argo minimum.<br>` + 
                                      `⚠️ <b>Saran Taktik:</b> Kurangi mengambil Hemat Rp 10.200 karena sisa bersih terpotong banyak. Targetkan minimal orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan orderan <b>Bike Standard</b> agar rasio potongan komisi harian Anda tidak boncos menggerus bensin.`;
             }
-            // ----------------------------------------------------
 
             let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
             totalOrder = dataHariIni.length;
@@ -487,7 +419,7 @@
 
         } else {
             boxPotongan.style.display = "none"; 
-            boxSaran.style.display = "none"; // Sembunyikan kotak saran jika di mode mingguan/bulanan
+            boxSaran.style.display = "none"; 
             if (modeTampilan === 'minggu') {
                 header.innerHTML = `<th>Senin</th><th>Order</th><th>Kotor (Gross)</th><th>Potongan</th><th>Uang Bersih (Net)</th>`;
                 let kelompokMingguan = {};
