@@ -46,6 +46,10 @@
         .potongan-hemat-box label { color: #d35400; font-size: 13px; margin-bottom: 4px; }
         .potongan-hemat-box input { padding: 8px; font-size: 15px; margin-top: 4px; border: 1px solid #ffcc80; }
 
+        /* Style Baru Kotak Rekomendasi Argo */
+        .suggestion-box { margin-top: 15px; padding: 12px 14px; background-color: #e3f2fd; border-radius: 8px; border: 1px solid #90caf9; font-size: 13,5px; line-height: 1.5; color: #0d47a1; }
+        .suggestion-title { font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: #1565c0; text-transform: uppercase; }
+
         .tabs { display: flex; gap: 6px; margin-bottom: 15px; }
         .tab-btn { background-color: #e9ecef; color: #495057; padding: 10px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;}
         .tab-btn.active { background-color: #00b14f; color: white; }
@@ -147,6 +151,12 @@
             <label for="potonganAsliInput"><b>Potongan Asli Hemat Esok Hari (Rp):</b><br><small id="subTextPrediksi">*Lihat menu dompet 'Deduction' besok pagi lalu isi disini</small></label>
             <input type="number" id="potonganAsliInput" placeholder="Memuat prediksi..." oninput="simpanPotonganManual()" inputmode="numeric">
         </div>
+    </div>
+
+    <!-- Kotak Saran Taktis Smart Driver -->
+    <div id="boxRekomendasiArgo" class="suggestion-box" style="display: none;">
+        <div class="suggestion-title">💡 Rekomendasi Taktis Anti-Boncos</div>
+        <div id="isiRekomendasi">Memuat saran performa...</div>
     </div>
 
     <table id="tabelTrip">
@@ -368,6 +378,8 @@
         const header = document.getElementById('headerTabel');
         const boxPotongan = document.getElementById('boxPotonganAsliHemat');
         const inputPlaceholderHemat = document.getElementById('potonganAsliInput');
+        const boxSaran = document.getElementById('boxRekomendasiArgo');
+        const isiSaran = document.getElementById('isiRekomendasi');
         tbody.innerHTML = '';
 
         let totalGross = 0, totalNet = 0, totalOrder = 0;
@@ -379,9 +391,20 @@
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
+            boxSaran.style.display = "block"; // Tampilkan kotak saran di mode harian
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             document.getElementById('judulRingkasan').innerText = `Riwayat Tanggal: ${tanggalTerpilih}`;
             
+            // --- LOGIKA GENERATOR SARAN DRIVER (ANTI-BONCOS) ---
+            if (levelDriver === 'jawara' || !polaArgoMinDipotong) {
+                isiSaran.innerHTML = `Akun Anda terdeteksi <b>JAWARA</b> (Bebas potongan penyesuaian tarif).<br>` + 
+                                     `🎯 <b>Saran Taktik:</b> Prioritaskan sikat habis <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> sebanyak-banyaknya. Ritase cepat, hemat bensin, dan potongan per baris Rp 0 / sangat tipis! Batasi Standard jarak jauh jika area macet.`;
+            } else {
+                isiSaran.innerHTML = `Akun Anda terdeteksi terkena potongan ekstra pada argo minimum.<br>` + 
+                                     `⚠️ <b>Saran Taktik:</b> Kurangi mengambil Hemat Rp 10.200 karena sisa bersih terpotong banyak. Targetkan minimal orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan orderan <b>Bike Standard</b> agar rasio potongan komisi harian Anda tidak boncos menggerus bensin.`;
+            }
+            // ----------------------------------------------------
+
             let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
             totalOrder = dataHariIni.length;
             let prediksiPotonganHematOtomatis = 0;
@@ -420,19 +443,15 @@
 
                 let lencanaLayanan = trip.layanan === 'standard' ? `<span class="badge bg-standard">Standard</span>` : `<span class="badge bg-hemat">Hemat</span>`;
                 
-                // --- PENYESUAIAN ARGO & POTONGAN HARDCODE ---
                 let argoTampil = 0;
                 let potBarisTampil = potBaris;
 
                 if (trip.layanan === 'standard') {
-                    // Bulatkan nilai gross ke ratusan ke bawah (Contoh: 12174 -> 12100)
                     argoTampil = Math.floor(trip.gross / 100) * 100;
-                    // Sesuaikan potongan baris agar rumus (ArgoTampil - PotonganTampil = Net) tetap pas!
                     potBarisTampil = argoTampil - trip.net;
                 } else {
                     argoTampil = trip.gross;
                 }
-                // ---------------------------------------------
 
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
@@ -468,6 +487,7 @@
 
         } else {
             boxPotongan.style.display = "none"; 
+            boxSaran.style.display = "none"; // Sembunyikan kotak saran jika di mode mingguan/bulanan
             if (modeTampilan === 'minggu') {
                 header.innerHTML = `<th>Senin</th><th>Order</th><th>Kotor (Gross)</th><th>Potongan</th><th>Uang Bersih (Net)</th>`;
                 let kelompokMingguan = {};
