@@ -5,54 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembukuan Trip Ojol</title>
     <meta name="theme-color" content="#00b14f">
-    
     <link rel="manifest" href="manifest.json">
-
     <style>
-        body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f4f9; color: #333; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2e7d32; margin-top: 5px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input[type="number"], input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; background-color: #fff; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 12px; background-color: #f8f9fa; color: #212529; }
+        .container { max-width: 480px; margin: auto; background: white; padding: 16px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: #00b14f; margin: 5px 0 15px 0; font-size: 22px; font-weight: 800; }
         
-        .date-nav { display: flex; gap: 5px; align-items: center; }
-        .date-nav button { width: auto; flex: 1; padding: 10px; background-color: #0288d1; font-weight: bold; margin: 0; color: white; border: none; border-radius: 5px;}
-        .date-nav input[type="date"] { flex: 3; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 13px; color: #495057; }
+        input[type="number"], input[type="date"], select { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #fff; color: #333; }
+        input:focus, select:focus { border-color: #00b14f; outline: none; box-shadow: 0 0 0 3px rgba(0,177,79,0.2); }
+        
+        .date-nav { display: flex; gap: 6px; align-items: center; }
+        .date-nav button { width: auto; flex: 1; padding: 12px; background-color: #0288d1; font-weight: bold; margin: 0; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .date-nav input[type="date"] { flex: 3; text-align: center; }
 
-        button { width: 100%; padding: 10px; background-color: #2e7d32; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-bottom: 8px; font-weight: bold; }
-        button.download { background-color: #1565c0; }
+        button.btn-primary { width: 100%; padding: 14px; background-color: #00b14f; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 10px; font-weight: bold; transition: background 0.2s; }
+        button.btn-primary:hover { background-color: #009643; }
         
-        .btn-action { background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; margin: 0 2px; }
+        /* Menu Pengaturan Lipat (Accordion) */
+        .accordion-section { border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 15px; background: #f1f3f5; overflow: hidden; }
+        .accordion-toggle { background: #e9ecef; padding: 10px; font-size: 13px; font-weight: bold; cursor: pointer; text-align: center; color: #495057; display: flex; justify-content: center; align-items: center; gap: 5px; }
+        .accordion-content { display: none; padding: 12px; border-top: 1px solid #dee2e6; background: #fff; }
+        .backup-zone { display: flex; flex-direction: column; gap: 6px; }
+        .backup-zone-row { display: flex; gap: 6px; }
+        .backup-zone button { flex: 1; padding: 8px; font-size: 12px; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; }
+        .btn-backup { background-color: #00796b; }
+        .btn-restore { background-color: #7b1fa2; }
+        .btn-download { background-color: #1565c0; }
+        .btn-reset { background-color: #e53935; }
+
+        .summary-box { margin-top: 15px; padding: 14px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
+        .summary-box h3 { margin: 0 0 10px 0; font-size: 15px; color: #495057; border-bottom: 2px solid #00b14f; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-box p { margin: 8px 0; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .bold { font-weight: 700; color: #212529; font-size: 15px; }
+        .red-bold { font-weight: 700; color: #dc3545; }
+        .green-bold { font-weight: 800; color: #28a745; font-size: 18px; }
+        
+        .potongan-section { border-top: 1px dashed #dee2e6; margin-top: 8px; padding-top: 8px; }
+        .potongan-hemat-box { background-color: #fff3e0; padding: 12px; border: 1px solid #ffe0b2; border-radius: 8px; margin-top: 10px; }
+        .potongan-hemat-box label { color: #d35400; font-size: 13px; margin-bottom: 4px; }
+        .potongan-hemat-box input { padding: 8px; font-size: 15px; margin-top: 4px; border: 1px solid #ffcc80; }
+
+        .tabs { display: flex; gap: 6px; margin-bottom: 15px; }
+        .tab-btn { background-color: #e9ecef; color: #495057; padding: 10px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;}
+        .tab-btn.active { background-color: #00b14f; color: white; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; background: white; }
+        th, td { border: 1px solid #dee2e6; padding: 8px 6px; text-align: center; }
+        th { background-color: #f1f3f5; color: #495057; font-weight: 700; }
+        
+        .btn-action { background: none; border: none; font-size: 15px; cursor: pointer; padding: 2px; }
         .btn-edit-row { color: #0288d1; }
-        .btn-delete-row { color: #e53935; }
-        
-        .backup-zone { display: flex; gap: 8px; margin-bottom: 12px; }
-        .btn-backup { background-color: #00796b; font-size: 14px; margin-bottom: 0; }
-        .btn-restore { background-color: #7b1fa2; font-size: 14px; margin-bottom: 0; }
-
-        .summary-box { margin-top: 15px; padding: 12px; background-color: #efebe9; border-radius: 5px; border-left: 5px solid #ff9800; }
-        .summary-box h3 { margin: 0 0 8px 0; font-size: 16px; color: #5d4037; border-bottom: 1px dashed #bcaaa4; padding-bottom: 4px; }
-        .summary-box p { margin: 6px 0; font-size: 14px; display: flex; justify-content: space-between; }
-        .bold { font-weight: bold; color: #333; }
-        .red-bold { font-weight: bold; color: #c62828; }
-        .green-bold { font-weight: bold; color: #2e7d32; }
-        
-        .potongan-section { border-top: 1px solid #d7ccc8; margin-top: 6px; padding-top: 6px; }
-        .potongan-hemat-box { background-color: #fff3e0; padding: 10px; border: 1px solid #ffe0b2; border-radius: 5px; margin-top: 8px; }
-        .potongan-hemat-box label { color: #e65100; font-size: 13px; }
-        .potongan-hemat-box input { padding: 6px; font-size: 14px; margin-top: 4px; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { border: 1px solid #ddd; padding: 6px 4px; text-align: center; }
-        th { background-color: #e8f5e9; }
-        #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; width: 100%; }
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab-btn { background-color: #e0e0e0; color: #333; padding: 8px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;}
-        .tab-btn.active { background-color: #2e7d32; color: white; }
-        .badge { padding: 2px 5px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; }
-        .bg-hemat { background-color: #43a047; }
-        .bg-standard { background-color: #0288d1; }
+        .btn-delete-row { color: #dc3545; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; }
+        .bg-hemat { background-color: #28a745; }
+        .bg-standard { background-color: #007bff; }
+        #installBtn { display: none; background-color: #ff9800; color: black; font-weight: bold; margin-bottom: 15px; width: 100%; border: none; padding: 10px; border-radius: 8px; cursor: pointer;}
     </style>
 </head>
 <body>
@@ -62,69 +71,75 @@
     <button id="installBtn">⬇️ INSTALL APLIKASI KE LAYAR HP</button>
     
     <div class="tabs">
-        <button class="tab-btn active" id="tabHari" onclick="gantiTampilan('hari')">Data Harian</button>
-        <button class="tab-btn" id="tabMinggu" onclick="gantiTampilan('minggu')">Rekap Mingguan</button>
-        <button class="tab-btn" id="tabBulan" onclick="gantiTampilan('bulan')">Rekap Bulanan</button>
+        <button class="tab-btn active" id="tabHari" onclick="gantiTampilan('hari')">Harian</button>
+        <button class="tab-btn" id="tabMinggu" onclick="gantiTampilan('minggu')">Mingguan</button>
+        <button class="tab-btn" id="tabBulan" onclick="gantiTampilan('bulan')">Bulanan</button>
     </div>
 
-    <div class="backup-zone">
-        <button class="btn-backup" onclick="exportDataKeJSON()">📤 BACKUP DATA</button>
-        <button class="btn-restore" onclick="pemicuPilihFileJSON()">📥 RESTORE DATA</button>
-        <input type="file" id="fileJSONInput" accept=".json" style="display: none;" onchange="importDataDariJSON(event)">
-    </div>
-
-    <div class="form-group">
-        <label for="tanggalTrip">Pilih Tanggal Narik:</label>
-        <div class="date-nav">
-            <button onclick="navigasiTanggal(-1)">◀ Prev</button>
-            <input type="date" id="tanggalTrip">
-            <button onclick="navigasiTanggal(1)">Next ▶</button>
+    <div class="accordion-section">
+        <div class="accordion-toggle" onclick="toggleAccordion()">⚙️ Pengaturan Aplikasi & Ekspor Data <span id="accArrow">▼</span></div>
+        <div class="accordion-content" id="accContent">
+            <div class="form-group">
+                <label for="levelDriverInput">Level Driver Anda Saat Ini:</label>
+                <select id="levelDriverInput" onchange="prosesDanTampilkan()">
+                    <option value="jawara">1. Jawara</option>
+                    <option value="ksatria">2. Ksatria</option>
+                    <option value="pejuang">3. Pejuang</option>
+                    <option value="anggota">4. Anggota</option>
+                </select>
+            </div>
+            <div class="backup-zone">
+                <div class="backup-zone-row">
+                    <button class="btn-backup" onclick="exportDataKeJSON()">📤 Backup Data</button>
+                    <button class="btn-restore" onclick="pemicuPilihFileJSON()">📥 Restore Data</button>
+                </div>
+                <button class="btn-download" onclick="downloadCSV()">📊 Download Laporan Excel (.CSV)</button>
+                <button class="btn-reset" onclick="resetData()">⚠️ Hapus Semua Riwayat Aplikasi</button>
+                <input type="file" id="fileJSONInput" accept=".json" style="display: none;" onchange="importDataDariJSON(event)">
+            </div>
         </div>
     </div>
 
     <div class="form-group">
-        <label for="levelDriverInput">Level Driver Anda:</label>
-        <select id="levelDriverInput" onchange="prosesDanTampilkan()">
-            <option value="jawara">1. Jawara</option>
-            <option value="ksatria">2. Ksatria</option>
-            <option value="pejuang">3. Pejuang</option>
-            <option value="anggota">4. Anggota</option>
-        </select>
+        <label for="tanggalTrip">Tanggal Narik:</label>
+        <div class="date-nav">
+            <button onclick="navigasiTanggal(-1)">◀</button>
+            <input type="date" id="tanggalTrip">
+            <button onclick="navigasiTanggal(1)">▶</button>
+        </div>
     </div>
 
     <div class="form-group">
-        <label for="jenisLayanan">Jenis Layanan:</label>
+        <label for="jenisLayanan">Jenis Layanan Grab:</label>
         <select id="jenisLayanan" onchange="updateLabelInput()">
-            <option value="hemat">GrabBike Hemat (Potongan Esok Hari)</option>
-            <option value="standard">GrabBike Standard (Potongan 8% Langsung)</option>
+            <option value="hemat">GrabBike Hemat</option>
+            <option value="standard">GrabBike Standard</option>
         </select>
     </div>
 
     <div class="form-group">
-        <label id="labelArgo" for="argoInput">Masukkan Argo Kotor / Gross (Rp):</label>
-        <input type="number" id="argoInput" placeholder="Contoh: 10200" onkeypress="handleKeyPress(event)">
+        <label id="labelArgo" for="argoInput">Masukkan Argo di Aplikasi (Rp):</label>
+        <input type="number" id="argoInput" placeholder="Contoh: 10200" onkeypress="handleKeyPress(event)" inputmode="numeric">
     </div>
     
-    <button id="btnSubmitTrip" onclick="tambahTrip()">Tambah Trip</button>
-    <button class="download" onclick="downloadCSV()">Download Excel Laporan (.CSV)</button>
-    <button style="background-color: #757575;" onclick="resetData()">Hapus Semua Data</button>
+    <button id="btnSubmitTrip" class="btn-primary" onclick="tambahTrip()">Tambah Trip</button>
 
     <div class="summary-box">
         <h3 id="judulRingkasan">Ringkasan Hari Ini</h3>
         <p>Total Orderan Sukses: <span id="totalOrder" class="bold">0</span></p>
-        <p>Total Gross (Pendapatan Kotor): <span id="sumGross" class="bold">Rp 0</span></p>
+        <p>Total Pendapatan Kotor: <span id="sumGross" class="bold">Rp 0</span></p>
         
         <div class="potongan-section">
             <p>Potongan Langsung Standard (8%): <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
             <p>Potongan Esok Hari Hemat: <span id="sumPotonganHemat" class="red-bold">Rp 0</span></p>
-            <p style="border-top: 1px dashed #bcaaa4; padding-top: 4px; font-weight: bold;">Total Komisi (Kombinasi): <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
+            <p style="border-top: 1px dashed #ced4da; padding-top: 6px; font-weight: bold;">Total Potongan Komisi: <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
         </div>
 
-        <p style="margin-top: 10px; border-top: 1px solid #d7ccc8; padding-top: 6px;">Estimasi Pendapatan Net (Bersih): <span id="sumNet" class="green-bold">Rp 0</span></p>
+        <p style="margin-top: 10px; border-top: 1px solid #ced4da; padding-top: 8px;">Uang Bersih Dompet (Net): <span id="sumNet" class="green-bold">Rp 0</span></p>
 
         <div class="potongan-hemat-box" id="boxPotonganAsliHemat">
-            <label for="potonganAsliInput"><b>Potongan Asli GB Hemat Esok Hari (Rp):</b><br><small id="subTextPrediksi">*Masukkan nominal transaksi 'Deduction' dari aplikasi GrabDriver</small></label>
-            <input type="number" id="potonganAsliInput" placeholder="Memuat prediksi..." oninput="simpanPotonganManual()">
+            <label for="potonganAsliInput"><b>Potongan Asli Hemat Esok Hari (Rp):</b><br><small id="subTextPrediksi">*Lihat menu dompet 'Deduction' besok pagi lalu isi disini</small></label>
+            <input type="number" id="potonganAsliInput" placeholder="Memuat prediksi..." oninput="simpanPotonganManual()" inputmode="numeric">
         </div>
     </div>
 
@@ -133,7 +148,7 @@
             <tr id="headerTabel">
                 <th>No</th>
                 <th>Layanan</th>
-                <th>Gross</th>
+                <th>Argo</th>
                 <th>Potongan</th>
                 <th>Net</th>
                 <th>Aksi</th>
@@ -146,17 +161,21 @@
 <script>
     let masterData = [];
     let potonganHematManual = {}; 
+    let databasePolaLevel = {
+        jawara: { argoMinDipotong: false, totalSampelHari: 0 },
+        ksatria: { argoMinDipotong: true, totalSampelHari: 0 },
+        pejuang: { argoMinDipotong: true, totalSampelHari: 0 },
+        anggota: { argoMinDipotong: true, totalSampelHari: 0 }
+    };
+
     let modeTampilan = 'hari'; 
     let idDataSedangDiedit = null;
 
     document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
 
-    if (localStorage.getItem('masterDataOjol')) {
-        masterData = JSON.parse(localStorage.getItem('masterDataOjol'));
-    }
-    if (localStorage.getItem('potonganHematManualOjol')) {
-        potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol'));
-    }
+    if (localStorage.getItem('masterDataOjol')) masterData = JSON.parse(localStorage.getItem('masterDataOjol'));
+    if (localStorage.getItem('potonganHematManualOjol')) potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol'));
+    if (localStorage.getItem('databasePolaLevelOjol')) databasePolaLevel = JSON.parse(localStorage.getItem('databasePolaLevelOjol'));
 
     updateLabelInput();
     prosesDanTampilkan();
@@ -165,16 +184,29 @@
         if (event.key === "Enter") tambahTrip();
     }
 
+    function toggleAccordion() {
+        const content = document.getElementById('accContent');
+        const arrow = document.getElementById('accArrow');
+        if (content.style.display === "block") {
+            content.style.display = "none";
+            arrow.innerText = "▼";
+        } else {
+            content.style.display = "block";
+            arrow.innerText = "▲";
+        }
+    }
+
     function updateLabelInput() {
         const layanan = document.getElementById('jenisLayanan').value;
         const label = document.getElementById('labelArgo');
         const input = document.getElementById('argoInput');
         
+        // DIBUAT SEDERHANA: Semua input mengacu pada nominal yang terlihat di HP saat trip selesai
         if (layanan === 'standard') {
-            label.innerText = "Masukkan Pendapatan Bersih / Net (Rp):";
+            label.innerText = "Masukkan Uang Masuk Dompet / Net (Rp):";
             input.placeholder = "Contoh: 11200";
         } else {
-            label.innerText = "Masukkan Argo Kotor / Gross (Rp):";
+            label.innerText = "Masukkan Argo Aplikasi / Gross (Rp):";
             input.placeholder = "Contoh: 10200";
         }
     }
@@ -183,20 +215,18 @@
         const inputTanggal = document.getElementById('tanggalTrip');
         let tanggalSemula = new Date(inputTanggal.value);
         if (isNaN(tanggalSemula.getTime())) tanggalSemula = new Date();
-        
         tanggalSemula.setDate(tanggalSemula.getDate() + hari);
         inputTanggal.value = tanggalSemula.toISOString().slice(0,10);
-        
         if(modeTampilan === 'hari') prosesDanTampilkan();
     }
 
     function simpanPotonganManual() {
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
         const val = parseInt(document.getElementById('potonganAsliInput').value) || 0;
-        
         if(val >= 0) {
             potonganHematManual[tanggalTerpilih] = val;
             localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+            latihDatabaseKecerdasan();
             prosesDanTampilkan();
         }
     }
@@ -205,10 +235,11 @@
         const inputTanggal = document.getElementById('tanggalTrip').value;
         const inputArgo = document.getElementById('argoInput');
         const layanan = document.getElementById('jenisLayanan').value;
+        const levelSaatIni = document.getElementById('levelDriverInput').value;
         const nilaiInput = parseInt(inputArgo.value);
 
         if (!inputTanggal) return alert("Pilih tanggal terlebih dahulu!");
-        if (isNaN(nilaiInput) || nilaiInput <= 0) return alert("Masukkan nominal angka yang valid!");
+        if (isNaN(nilaiInput) || nilaiInput <= 0) return alert("Masukkan nominal angka argo!");
 
         let gross = 0, potongan = 0, net = 0;
 
@@ -225,18 +256,18 @@
         if (idDataSedangDiedit !== null) {
             masterData = masterData.map(item => {
                 if (item.id === idDataSedangDiedit) {
-                    return { ...item, tanggal: inputTanggal, layanan, gross, potongan, net };
+                    return { ...item, tanggal: inputTanggal, layanan, level_driver: levelSaatIni, gross, potongan, net };
                 }
                 return item;
             });
             idDataSedangDiedit = null;
             document.getElementById('btnSubmitTrip').innerText = "Tambah Trip";
-            document.getElementById('btnSubmitTrip').style.backgroundColor = "#2e7d32";
         } else {
             masterData.push({
                 id: Date.now() + Math.random(),
                 tanggal: inputTanggal,
                 layanan,
+                level_driver: levelSaatIni, // Data level direkam per baris untuk data train CSV
                 gross,
                 potongan,
                 net
@@ -244,6 +275,7 @@
         }
 
         localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+        latihDatabaseKecerdasan();
         inputArgo.value = '';
         inputArgo.focus();
         gantiTampilan('hari');
@@ -252,22 +284,21 @@
     function editBaris(idUnik) {
         const item = masterData.find(t => t.id === idUnik);
         if (!item) return;
-
         idDataSedangDiedit = idUnik;
         document.getElementById('tanggalTrip').value = item.tanggal;
         document.getElementById('jenisLayanan').value = item.layanan;
+        if(item.level_driver) document.getElementById('levelDriverInput').value = item.level_driver;
         updateLabelInput();
-        
         document.getElementById('argoInput').value = item.layanan === 'standard' ? item.net : item.gross;
         document.getElementById('btnSubmitTrip').innerText = "💾 Simpan Perubahan";
-        document.getElementById('btnSubmitTrip').style.backgroundColor = "#0288d1";
         document.getElementById('argoInput').focus();
     }
 
     function hapusBaris(idUnik) {
-        if (confirm("Hapus baris data trip ini?")) {
+        if (confirm("Hapus data trip ini?")) {
             masterData = masterData.filter(item => item.id !== idUnik);
             localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+            latihDatabaseKecerdasan();
             prosesDanTampilkan();
         }
     }
@@ -288,9 +319,33 @@
         return new Date(date.setDate(diff)).toISOString().slice(0,10);
     }
 
-    // ==========================================
-    // FUNGSI UTAMA BARU DENGAN COCOK POLA (TRAIN DATA)
-    // ==========================================
+    function latihDatabaseKecerdasan() {
+        const levelSaatIni = document.getElementById('levelDriverInput').value;
+        let sampelHariLalu = Object.keys(potonganHematManual);
+        let totalHariValidasi = 0;
+        let hariArgoMinBebasPotongan = 0;
+
+        sampelHariLalu.forEach(tgl => {
+            let tripHematHariItu = masterData.filter(item => item.tanggal === tgl && item.layanan === 'hemat');
+            let hanyaArgoMinimum = tripHematHariItu.length > 0 && tripHematHariItu.every(item => item.gross <= 10200);
+            let potonganAsliHariItu = potonganHematManual[tgl] || 0;
+
+            if (hanyaArgoMinimum) {
+                totalHariValidasi++;
+                if (potonganAsliHariItu === 0) hariArgoMinBebasPotongan++;
+            }
+        });
+
+        if (totalHariValidasi > 0) {
+            databasePolaLevel[levelSaatIni].argoMinDipotong = (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
+            databasePolaLevel[levelSaatIni].totalSampelHari = totalHariValidasi;
+        } else {
+            databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni !== 'jawara');
+            databasePolaLevel[levelSaatIni].totalSampelHari = 0;
+        }
+        localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
+    }
+
     function prosesDanTampilkan() {
         const tbody = document.querySelector('#tabelTrip tbody');
         const header = document.getElementById('headerTabel');
@@ -302,43 +357,17 @@
         let totalPotonganStandard = 0, totalPotonganHemat = 0;
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
-        const levelDriver = document.getElementById('levelDriverInput')?.value || 'jawara';
+        const levelDriver = document.getElementById('levelDriverInput').value;
+        let polaArgoMinDipotong = databasePolaLevel[levelDriver]?.argoMinDipotong;
+        let totalSmp = databasePolaLevel[levelDriver]?.totalSampelHari || 0;
 
         if (modeTampilan === 'hari') {
             boxPotongan.style.display = "block";
-            header.innerHTML = `<th>No</th><th>Layanan</th><th>Gross</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
-            document.getElementById('judulRingkasan').innerText = `Ringkasan Riwayat: ${tanggalTerpilih}`;
+            header.innerHTML = `<th>No</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
+            document.getElementById('judulRingkasan').innerText = `Riwayat Tanggal: ${tanggalTerpilih}`;
             
             let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
             totalOrder = dataHariIni.length;
-
-            // 1. ANALISIS POLA (TRAIN DATA) BERDASARKAN INPUT ASLI MASA LALU
-            let polaArgoMinDipotong = true; // Default awal jika tidak ada data
-            if (levelDriver === 'jawara') polaArgoMinDipotong = false; 
-
-            let sampelHariLalu = Object.keys(potonganHematManual).filter(tgl => tgl !== tanggalTerpilih);
-            let totalHariValidasi = 0;
-            let hariArgoMinBebasPotongan = 0;
-
-            sampelHariLalu.forEach(tgl => {
-                let tripHematHariItu = masterData.filter(item => item.tanggal === tgl && item.layanan === 'hemat');
-                let hanyaArgoMinimum = tripHematHariItu.length > 0 && tripHematHariItu.every(item => item.gross <= 10200);
-                let potonganAsliHariItu = potonganHematManual[tgl] || 0;
-
-                if (hanyaArgoMinimum) {
-                    totalHariValidasi++;
-                    if (potonganAsliHariItu === 0) {
-                        hariArgoMinBebasPotongan++;
-                    }
-                }
-            });
-
-            // Jika > 50% data latih harian menunjukkan argo min bersih dari potongan, sistem akan merespons Rp0
-            if (totalHariValidasi > 0) {
-                polaArgoMinDipotong = (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
-            }
-
-            // 2. HITUNG PREDIKSI TIAP ITEM TRIP
             let prediksiPotonganHematOtomatis = 0;
 
             dataHariIni.forEach((trip) => {
@@ -356,10 +385,8 @@
                 prediksiPotonganHematOtomatis = Math.max(0, prediksiPotonganHematOtomatis - 100);
             }
 
-            // 3. RENDER DATA KE TABEL HARIAN
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
-                
                 let potBaris = 0;
                 if (trip.layanan === 'standard') {
                     trip.prediksiPotonganItem = trip.potongan;
@@ -368,54 +395,49 @@
                 } else {
                     if (potonganHematManual[tanggalTerpilih] !== undefined) {
                         let totalManual = potonganHematManual[tanggalTerpilih];
-                        potBaris = prediksiPotonganHematOtomatis > 0 ? 
-                            (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
+                        potBaris = prediksiPotonganHematOtomatis > 0 ? (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
                     } else {
                         potBaris = trip.prediksiPotonganItem;
                     }
                 }
 
-                let lencanaLayanan = trip.layanan === 'standard' ? 
-                    `<span class="badge bg-standard">Standard</span>` : 
-                    `<span class="badge bg-hemat">Hemat</span>`;
+                let lencanaLayanan = trip.layanan === 'standard' ? `<span class="badge bg-standard">Standard</span>` : `<span class="badge bg-hemat">Hemat</span>`;
+                let argoTampil = trip.layanan === 'standard' ? trip.net : trip.gross;
 
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td>${lencanaLayanan}</td>
-                    <td>Rp ${Math.round(trip.gross).toLocaleString('id-ID')}</td>
-                    <td style="color: #c62828;">Rp ${Math.round(potBaris).toLocaleString('id-ID')}</td>
-                    <td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(trip.gross - potBaris).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.round(argoTampil).toLocaleString('id-ID')}</td>
+                    <td style="color: #dc3545;">Rp ${Math.round(potBaris).toLocaleString('id-ID')}</td>
+                    <td style="color: #28a745; font-weight: bold;">Rp ${Math.round(trip.gross - potBaris).toLocaleString('id-ID')}</td>
                     <td>
-                        <button class="btn-action btn-edit-row" onclick="editBaris(${trip.id})" title="Ubah Data">✏️</button>
-                        <button class="btn-action btn-delete-row" onclick="hapusBaris(${trip.id})" title="Hapus Data">🗑️</button>
+                        <button class="btn-action btn-edit-row" onclick="editBaris(${trip.id})">✏️</button>
+                        <button class="btn-action btn-delete-row" onclick="hapusBaris(${trip.id})">🗑️</button>
                     </td>
                 </tr>`;
             });
 
-            // 4. UPDATE UI RINGKASAN DATA
-            let statusSistem = totalHariValidasi > 0 ? `Cerdas (${totalHariValidasi} Data Latih)` : `Prediksi Awal`;
-            inputPlaceholderHemat.placeholder = `Menebak via ${statusSistem}: Rp ${prediksiPotonganHematOtomatis.toLocaleString('id-ID')}`;
+            inputPlaceholderHemat.placeholder = `Prediksi otomatis: Rp ${prediksiPotonganHematOtomatis.toLocaleString('id-ID')}`;
             document.getElementById('potonganAsliInput').value = potonganHematManual[tanggalTerpilih] || '';
 
             let labelHematStatus = potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0 ? " (Asli)" : " (Prediksi)";
             totalPotonganHemat = potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0 ? potonganHematManual[tanggalTerpilih] : prediksiPotonganHematOtomatis;
             
             let totalGrossHematHariIni = dataHariIni.filter(t => t.layanan === 'hemat').reduce((sum, t) => sum + t.gross, 0);
-            let persenHematTeks = totalGrossHematHariIni > 0 ? ` (${((totalPotonganHemat / totalGrossHematHariIni) * 100).toFixed(2)}%)` : " (0%)";
+            let persenHematTeks = totalGrossHematHariIni > 0 ? ` (${((totalPotonganHemat / totalGrossHematHariIni) * 100).toFixed(1)}%)` : " (0%)";
 
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')} (${totalPotonganStandard > 0 ? '8.00%' : '0%'})`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}${persenHematTeks}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')} (${totalGross > 0 ? ((totalPotonganKombinasi / totalGross) * 100).toFixed(2) : 0}%)`;
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.round(totalPotonganStandard).toLocaleString('id-ID')}`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.round(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.round(totalPotonganKombinasi).toLocaleString('id-ID')}`;
 
         } else {
-            // Logika Tab Rekap Mingguan & Bulanan
+            // Tampilan Mingguan & Bulanan
             boxPotongan.style.display = "none"; 
             if (modeTampilan === 'minggu') {
-                header.innerHTML = `<th>Periode Senin</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
-                document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Mingguan";
+                header.innerHTML = `<th>Senin</th><th>Order</th><th>Kotor (Gross)</th><th>Potongan</th><th>Uang Bersih (Net)</th>`;
                 let kelompokMingguan = {};
                 masterData.forEach(item => {
                     let senin = getAwalMinggu(item.tanggal);
@@ -432,11 +454,10 @@
                     let k = kelompokMingguan[minggu];
                     let totalPotRow = k.potStd + k.potHmt;
                     totalGross += k.gross; totalPotonganStandard += k.potStd; totalPotonganHemat += k.potHmt; totalOrder += k.order;
-                    tbody.innerHTML += `<tr><td>${minggu}</td><td>${k.order}</td><td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td><td style="color: #c62828;">Std: Rp ${Math.round(k.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(k.potHmt).toLocaleString('id-ID')}</td><td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(k.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>${minggu}</td><td>${k.order}</td><td>Rp ${Math.round(k.gross).toLocaleString('id-ID')}</td><td style="color: #dc3545;">Rp ${Math.round(totalPotRow).toLocaleString('id-ID')}</td><td style="color: #28a745; font-weight: bold;">Rp ${Math.round(k.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
                 });
             } else if (modeTampilan === 'bulan') {
-                header.innerHTML = `<th>Bulan</th><th>Total Order</th><th>Total Gross</th><th>Potongan (Std/Hmt)</th><th>Total Net</th>`;
-                document.getElementById('judulRingkasan').innerText = "Rangkuman Seluruh Penghasilan Bulanan";
+                header.innerHTML = `<th>Bulan</th><th>Order</th><th>Kotor (Gross)</th><th>Potongan</th><th>Uang Bersih (Net)</th>`;
                 let kelompokBulanan = {};
                 masterData.forEach(item => {
                     let bulan = item.tanggal.substring(0, 7);
@@ -453,7 +474,7 @@
                     let b = kelompokBulanan[bln];
                     let totalPotRow = b.potStd + b.potHmt;
                     totalGross += b.gross; totalPotonganStandard += b.potStd; totalPotonganHemat += b.potHmt; totalOrder += b.order;
-                    tbody.innerHTML += `<tr><td>${bln}</td><td>${b.order}</td><td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td><td style="color: #c62828;">Std: Rp ${Math.round(b.potStd).toLocaleString('id-ID')}<br>Hmt: Rp ${Math.round(b.potHmt).toLocaleString('id-ID')}</td><td style="color: #2e7d32; font-weight: bold;">Rp ${Math.round(b.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
+                    tbody.innerHTML += `<tr><td>${bln}</td><td>${b.order}</td><td>Rp ${Math.round(b.gross).toLocaleString('id-ID')}</td><td style="color: #dc3545;">Rp ${Math.round(totalPotRow).toLocaleString('id-ID')}</td><td style="color: #28a745; font-weight: bold;">Rp ${Math.round(b.gross - totalPotRow).toLocaleString('id-ID')}</td></tr>`;
                 });
             }
             let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
@@ -468,11 +489,11 @@
     }
 
     function exportDataKeJSON() {
-        let dataBkp = { masterData, potonganHematManual };
+        let dataBkp = { masterData, potonganHematManual, databasePolaLevel };
         let blob = new Blob([JSON.stringify(dataBkp)], { type: "application/json" });
         let a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_ojol_${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `backup_pembukuan_ojol_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     }
     
@@ -487,44 +508,52 @@
                 let data = JSON.parse(evt.target.result);
                 let dataTrip = data.masterData || data.riwayatTrip || data;
                 let dataPotongan = data.potonganHematManual || data.potonganManual || {};
+                let dataPola = data.databasePolaLevel || {};
 
                 if (Array.isArray(dataTrip)) {
                     masterData = dataTrip;
                     potonganHematManual = dataPotongan;
+                    databasePolaLevel = Object.keys(dataPola).length ? dataPola : databasePolaLevel;
                     localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
                     localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+                    localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
                     prosesDanTampilkan();
                     alert("Data berhasil dipulihkan!");
-                } else if (data && typeof data === 'object' && !Array.isArray(data)) {
-                    if (data.masterData && Array.isArray(data.masterData)) {
-                        masterData = data.masterData;
-                        potonganHematManual = data.potonganHematManual || {};
-                        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
-                        localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
-                        prosesDanTampilkan();
-                        alert("Data berhasil dipulihkan!");
-                    } else {
-                        alert("Format isi data di dalam file JSON tidak dikenali!");
-                    }
                 } else {
-                    alert("Format isi data tidak dikenali!");
+                    alert("Format data tidak cocok!");
                 }
-            } catch(err) { alert("File JSON tidak valid!"); }
+            } catch(err) { alert("File rusak atau tidak valid!"); }
         };
         reader.readAsText(file);
     }
     
     function resetData() {
-        if(confirm("Hapus seluruh riwayat pembukuan?")) {
-            localStorage.clear(); masterData = []; potonganHematManual = {}; prosesDanTampilkan();
+        if(confirm("Hapus semua riwayat di aplikasi ini?")) {
+            localStorage.clear(); masterData = []; potonganHematManual = {}; 
+            databasePolaLevel = { jawara: { argoMinDipotong: false, totalSampelHari: 0 }, ksatria: { argoMinDipotong: true, totalSampelHari: 0 }, pejuang: { argoMinDipotong: true, totalSampelHari: 0 }, anggota: { argoMinDipotong: true, totalSampelHari: 0 }};
+            prosesDanTampilkan();
         }
     }
+
+    // ==========================================
+    // DATA TRAIN READY: STRUKTUR DATA CSV REKOR BARU
+    // ==========================================
     function downloadCSV() {
-        let csv = "Tanggal,Layanan,Gross,Potongan,Net\n";
-        masterData.forEach(t => { csv += `${t.tanggal},${t.layanan},${t.gross},${t.potongan},${t.net}\n`; });
-        let blob = new Blob([csv], { type: "text/csv" });
-        let a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-        a.download = "laporan_ojol.csv"; a.click();
+        // Kolom dirapikan agar siap dibaca Python/Google Sheets untuk data train
+        let csv = "ID_Trip,Tanggal,Layanan,Level_Driver,Argo_Kotor_Gross,Potongan_Aplikasi,Uang_Bersih_Net,Potongan_Manual_Harian\n";
+        
+        masterData.forEach(t => { 
+            // Ambil input potongan manual harian untuk dicocokkan sebagai label data train
+            let potManualHariItu = potonganHematManual[t.tanggal] || 0;
+            let lvl = t.level_driver || "tidak_terekam";
+            csv += `${t.id},${t.tanggal},${t.layanan},${lvl},${t.gross},${t.potongan},${t.net},${potManualHariItu}\n`; 
+        });
+        
+        let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        let a = document.createElement("a"); 
+        a.href = URL.createObjectURL(blob);
+        a.download = `data_train_ojol_${new Date().toISOString().slice(0,10)}.csv`; 
+        a.click();
     }
 </script>
 </body>
