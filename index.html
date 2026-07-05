@@ -50,7 +50,6 @@
         .tab-btn { background-color: #e9ecef; color: #495057; padding: 10px; font-size: 13px; margin: 0; width: auto; flex: 1; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;}
         .tab-btn.active { background-color: #00b14f; color: white; }
         
-        /* Modifikasi Desain Tabel Lebih Bersih */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; background: white; border: 1px solid #dee2e6; }
         th, td { border: 1px solid #dee2e6; padding: 10px 6px; text-align: center; vertical-align: middle; }
         th { background-color: #f1f3f5; color: #495057; font-weight: 700; }
@@ -59,7 +58,6 @@
         .bg-hemat { background-color: #28a745; }
         .bg-standard { background-color: #007bff; }
         
-        /* Menu Dropdown Aksi (Gear) */
         .action-cell { position: relative; }
         .btn-gear { background: none; border: none; font-size: 16px; cursor: pointer; padding: 6px; border-radius: 4px; color: #6c757d; }
         .btn-gear:hover { background-color: #f1f3f5; }
@@ -138,7 +136,7 @@
         <p>Total Pendapatan Kotor: <span id="sumGross" class="bold">Rp 0</span></p>
         
         <div class="potongan-section">
-            <p>Potongan Langsung Standard (8%): <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
+            <p>Potongan Langsung Standard: <span id="sumPotonganStandard" class="red-bold">Rp 0</span></p>
             <p>Potongan Esok Hari Hemat: <span id="sumPotonganHemat" class="red-bold">Rp 0</span></p>
             <p style="border-top: 1px dashed #ced4da; padding-top: 6px; font-weight: bold;">Total Potongan Komisi: <span id="sumPotonganTotal" class="red-bold">Rp 0</span></p>
         </div>
@@ -289,7 +287,6 @@
         gantiTampilan('hari');
     }
 
-    // Fungsi Pengendali Dropdown Aksi (Gear)
     function toggleDropdown(event, idUnik) {
         event.stopPropagation();
         tutupSemuaDropdown();
@@ -449,9 +446,14 @@
             let totalPotonganKombinasi = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotonganKombinasi;
 
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')}${labelHematStatus}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotonganKombinasi).toLocaleString('id-ID')}`;
+            // Hitung Persentase Akurat Berdasarkan Total Gross Hari Ini
+            let persenStd = totalGross > 0 ? ((totalPotonganStandard / totalGross) * 100).toFixed(2) : "0.00";
+            let persenHemat = totalGross > 0 ? ((totalPotonganHemat / totalGross) * 100).toFixed(2) : "0.00";
+            let persenTotal = totalGross > 0 ? ((totalPotonganKombinasi / totalGross) * 100).toFixed(2) : "0.00";
+
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')} (${persenStd}%)`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')} ${labelHematStatus} (${persenHemat}%)`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotonganKombinasi).toLocaleString('id-ID')} (${persenTotal}%)`;
 
         } else {
             boxPotongan.style.display = "none"; 
@@ -498,9 +500,14 @@
             }
             let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
             totalNet = totalGross - totalPotKombinasiSeluruh;
-            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')}`;
-            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotKombinasiSeluruh).toLocaleString('id-ID')}`;
+            
+            let persenStd = totalGross > 0 ? ((totalPotonganStandard / totalGross) * 100).toFixed(2) : "0.00";
+            let persenHemat = totalGross > 0 ? ((totalPotonganHemat / totalGross) * 100).toFixed(2) : "0.00";
+            let persenTotal = totalGross > 0 ? ((totalPotKombinasiSeluruh / totalGross) * 100).toFixed(2) : "0.00";
+
+            document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')} (${persenStd}%)`;
+            document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')} (${persenHemat}%)`;
+            document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotKombinasiSeluruh).toLocaleString('id-ID')} (${persenTotal}%)`;
         }
         document.getElementById('totalOrder').innerText = totalOrder;
         document.getElementById('sumGross').innerText = `Rp ${Math.floor(totalGross).toLocaleString('id-ID')}`;
