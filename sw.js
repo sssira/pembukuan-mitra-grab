@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-ojol-v1';
+const CACHE_NAME = 'trip-ojol-v2'; // Naikkan versi ke v2 karena ada perubahan CSS kemarin
 const ASSETS = [
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch Handler (Wajib untuk syarat install Chrome)
+// Fetch Handler (Strategi: Cache First, Fallback to Network)
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
