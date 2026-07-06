@@ -91,9 +91,10 @@ function tambahTrip() {
 
     if (layanan === 'standard') {
         net = nilaiInput;
-        let hitungGrossAwal = net * (100 / 92);
-        gross = Math.floor(hitungGrossAwal / 100) * 100;
-        potongan = gross - net;
+        // Bulatkan gross langsung ke ratusan terdekat yang logis (Math.round)
+        gross = Math.round((net * (100 / 92)) / 100) * 100; 
+        // Hitung potongan murni dari selisihnya agar tetap bernilai bulat ratusan
+        potongan = gross - net; 
     } else {
         gross = nilaiInput;
         potongan = 0; 
@@ -287,11 +288,14 @@ function prosesDanTampilkan() {
                         if (trip.gross <= 10200) {
                             potBaris = 0;
                         } else {
-                            potBaris = totalPrediksiArgoBesarSaja > 0 ? (trip.prediksiPotonganItem / totalPrediksiArgoBesarSaja) * totalManual : 0;
+                            // Ditambahkan Math.round( ... / 100) * 100 agar hasil bagi kembali bulat ratusan
+                            let hitungPotonganSaja = totalPrediksiArgoBesarSaja > 0 ? (trip.prediksiPotonganItem / totalPrediksiArgoBesarSaja) * totalManual : 0;
+                            potBaris = Math.round(hitungPotonganSaja / 100) * 100;
                         }
                     } else {
-                        // KUNCI TERLEPAS (> 8%): Proporsional merata ke semua argo
-                        potBaris = prediksiPotonganHematOtomatis > 0 ? (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
+                        // KUNCI TERLEPAS (> 8%): Proporsional merata ke semua argo dengan pembulatan ratusan
+                        let hitungPotonganSaja = prediksiPotonganHematOtomatis > 0 ? (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
+                        potBaris = Math.round(hitungPotonganSaja / 100) * 100;
                     }
                 } else {
                     potBaris = trip.prediksiPotonganItem;
