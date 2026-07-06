@@ -15,7 +15,7 @@ let databasePolaLevel = {
 let modeTampilan = 'hari'; 
 let idDataSedangDiedit = null;
 
-// Inisialisasi awal saat load script
+// Inisialisasi awal saat load script oleh index.html
 function inisialisasiData() {
     document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
 
