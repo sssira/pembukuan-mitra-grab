@@ -2,7 +2,7 @@ const CACHE_NAME = 'trip-ojol-v2'; // Naikkan versi ke v2 karena ada perubahan C
 const ASSETS = [
   './',
   './index.html',
-  './calc.js'
+  './calc.js',
   './style.css',
   './manifest.json'
 ];
