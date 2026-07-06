@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-ojol-v2'; // Naikkan versi ke v2 karena ada perubahan CSS kemarin
+const CACHE_NAME = 'trip-ojol-v2'; 
 const ASSETS = [
   './',
   './index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch Handler (Strategi: Cache First, Fallback to Network)
+// Fetch Handler
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
