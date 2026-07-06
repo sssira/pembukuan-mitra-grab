@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
-<body onclick="tutupSemuaDropdown()">
+<body>
 
 <div class="dashboard-wrapper">
     <div class="main-header">
@@ -16,7 +16,7 @@
             <h2>Pembukuan Trip Ojol</h2>
             <p id="judulRingkasan">Memuat Ringkasan...</p>
         </div>
-        <button id="installBtn" class="btn-install-modern">⬇️ Install App</button>
+        <button id="installBtn" class="btn-install-modern" style="display: none;">⬇️ Install App</button>
     </div>
 
     <div class="grid-stats">
@@ -110,7 +110,7 @@
 
     <div class="accordion-section-modern">
         <div class="accordion-toggle-modern" onclick="toggleAccordion()">⚙️ Pengaturan & Backup Aplikasi <span id="accArrow">▼</span></div>
-        <div class="accordion-content-modern" id="accContent">
+        <div class="accordion-content-modern" id="accContent" style="display: none;">
             <div class="form-group-select">
                 <label for="levelDriverInput">Level Driver Anda:</label>
                 <select id="levelDriverInput" onchange="prosesDanTampilkan()">
@@ -133,10 +133,8 @@
 
 <script src="calc.js"></script>
 <script>
-    // Memulai pemrosesan data tepat setelah dokumen selesai dimuat
     window.addEventListener('DOMContentLoaded', inisialisasiData);
 
-    // Registrasi Service Worker untuk kapabilitas PWA & Auto Update di latar belakang
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -145,7 +143,6 @@
         });
     }
 
-    // Penanganan Tombol Install PWA di Handphone
     let deferredPrompt;
     const installBtn = document.getElementById('installBtn');
     window.addEventListener('beforeinstallprompt', (e) => {
