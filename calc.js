@@ -1,6 +1,6 @@
 /**
  * Core Matematika & Manajemen Data Aplikasi Pembukuan Ojol
- * Seluruh rumus perhitungan dikunci di sini agar mudah diedit.
+ * Seluruh rumus perhitungan dikunci di sini agar mudah edited.
  */
 
 let masterData = [];
@@ -15,17 +15,13 @@ let databasePolaLevel = {
 let modeTampilan = 'hari'; 
 let idDataSedangDiedit = null;
 
-// Inisialisasi awal saat load script oleh index.html
 function inisialisasiData() {
-    // Set default tanggal hari ini
     document.getElementById('tanggalTrip').value = new Date().toISOString().slice(0,10);
 
-    // Muat data dari localStorage jika ada
     if (localStorage.getItem('masterDataOjol')) masterData = JSON.parse(localStorage.getItem('masterDataOjol'));
     if (localStorage.getItem('potonganHematManualOjol')) potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol'));
     if (localStorage.getItem('databasePolaLevelOjol')) databasePolaLevel = JSON.parse(localStorage.getItem('databasePolaLevelOjol'));
 
-    // Tambahkan event listener agar setiap kali tanggal diubah manual lewat kalender, tabel otomatis ter-update
     document.getElementById('tanggalTrip').addEventListener('change', () => {
         if(modeTampilan === 'hari') prosesDanTampilkan();
     });
@@ -136,17 +132,24 @@ function tambahTrip() {
 
 function toggleDropdown(event, idUnik) {
     event.stopPropagation();
+    let menuObyek = document.getElementById(`drop-${idUnik}`);
+    let statusSebelumnya = menuObyek ? menuObyek.style.display : "none";
     tutupSemuaDropdown();
-    const menu = document.getElementById(`drop-${idUnik}`);
-    if (menu) menu.style.display = "block";
+    if (menuObyek && statusSebelumnya !== "block") {
+        menuObyek.style.display = "block";
+    }
 }
 
 function tutupSemuaDropdown() {
     document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = "none");
 }
 
-// Menambahkan penutupan dropdown global saat klik di mana saja
-document.addEventListener('click', tutupSemuaDropdown);
+// Menutup dropdown otomatis jika pengguna mengklik area bebas di luar menu aksi
+document.addEventListener('click', function(event) {
+    if (!event.target.matches('.btn-gear')) {
+        tutupSemuaDropdown();
+    }
+});
 
 function editBaris(idUnik) {
     const item = masterData.find(t => t.id === idUnik);
@@ -220,7 +223,7 @@ function prosesDanTampilkan() {
     const inputPlaceholderHemat = document.getElementById('potonganAsliInput');
     const boxSaran = document.getElementById('boxRekomendasiArgo');
     const isiSaran = document.getElementById('isiRekomendasi');
-    if (!tbody) return; // Mencegah crash jika tabel belum siap
+    if (!tbody) return; 
     tbody.innerHTML = '';
 
     let totalGross = 0, totalNet = 0, totalOrder = 0;
@@ -402,7 +405,6 @@ function prosesDanTampilkan() {
         totalNet = totalGross - totalPotKombinasiSeluruh;
 
         let persenHemat = totalGross > 0 ? ((totalPotonganHemat / totalGross) * 100).toFixed(1) : "0.0";
-        // PERBAIKAN: Mengubah nama variabel typo dari totalPotkomKombinasiSeluruh menjadi totalPotKombinasiSeluruh
         let persenTotal = totalGross > 0 ? ((totalPotKombinasiSeluruh / totalGross) * 100).toFixed(1) : "0.0";
         
         document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')}`;
@@ -415,7 +417,6 @@ function prosesDanTampilkan() {
     document.getElementById('totalOrder').innerText = totalOrder;
 }
 
-// Fitur Ekspor & Impor Data (Backup / Restore)
 function exportDataKeJSON() {
     const dataBackup = {
         masterData: masterData,
