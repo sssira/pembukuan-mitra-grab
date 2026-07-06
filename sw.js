@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-ojol-v4.3'; // Naikkan versi karena ada perubahan CSS kemarin
+const CACHE_NAME = 'trip-ojol-v4.4'; // Naikkan versi karena ada perubahan CSS kemarin
 const ASSETS = [
   './',
   './index.html',
