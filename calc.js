@@ -23,6 +23,9 @@ function inisialisasiData() {
     if (localStorage.getItem('potonganHematManualOjol')) potonganHematManual = JSON.parse(localStorage.getItem('potonganHematManualOjol'));
     if (localStorage.getItem('databasePolaLevelOjol')) databasePolaLevel = JSON.parse(localStorage.getItem('databasePolaLevelOjol'));
 
+    // Tambahkan event listener agar setiap ganti tanggal otomatis render ulang
+    document.getElementById('tanggalTrip').addEventListener('change', prosesDanTampilkan);
+
     updateLabelInput();
     prosesDanTampilkan();
 }
@@ -63,7 +66,7 @@ function navigasiTanggal(hari) {
     if (isNaN(tanggalSemula.getTime())) tanggalSemula = new Date();
     tanggalSemula.setDate(tanggalSemula.getDate() + hari);
     inputTanggal.value = tanggalSemula.toISOString().slice(0,10);
-    if(modeTampilan === 'hari') prosesDanTampilkan();
+    prosesDanTampilkan();
 }
 
 function simpanPotonganManual() {
@@ -91,9 +94,7 @@ function tambahTrip() {
 
     if (layanan === 'standard') {
         net = nilaiInput;
-        // Bulatkan gross langsung ke ratusan terdekat yang logis (Math.round)
         gross = Math.round((net * (100 / 92)) / 100) * 100; 
-        // Hitung potongan murni dari selisihnya agar tetap bernilai bulat ratusan
         potongan = gross - net; 
     } else {
         gross = nilaiInput;
@@ -228,11 +229,11 @@ function prosesDanTampilkan() {
         document.getElementById('judulRingkasan').innerText = `Tanggal: ${tanggalTerpilih}`;
         
         if (levelDriver === 'jawara' || !polaArgoMinDipotong) {
-            isiSaran.innerHTML = `Akun terdeteksi <b style='color:var(--brand-grab)'>JAWARA</b> (Bebas potongan penyesuaian).<br>` + 
-                                 `🎯 Sikat habis orderan <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> untuk efisiensi bahan bakar dan perolehan ritase instan tanpa pangkasan komisi.`;
+            isiSaran.innerHTML = `Akun terdeteksi <b style='color:var(--color-grab)'>JAWARA</b> (Bebas potongan penyesuaian).<br>` + 
+                                 `🎯 Sikat habis orderan <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> untuk efisiensi bahan bakar tanpa pangkasan komisi.`;
         } else {
             isiSaran.innerHTML = `Akun terdeteksi terkena penyesuaian komisi pada tarif dasar.<br>` + 
-                                 `⚠️ Batasi mengambil Hemat minimum jika area macet. Targetkan orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan <b>Bike Standard</b> untuk menjaga rasio profit harian.`;
+                                 `⚠️ Batasi mengambil Hemat minimum jika area macet. Targetkan orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan <b>Bike Standard</b>.`;
         }
 
         let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
@@ -242,7 +243,6 @@ function prosesDanTampilkan() {
         let prediksiPotonganHematOtomatis = 0;
         let totalPrediksiArgoBesarSaja = 0;
 
-        // FASE 1: Hitung Prediksi Menggunakan Matematika Dasar Anda (8% Floor)
         dataHariIni.forEach((trip) => {
             if (trip.layanan === 'hemat') {
                 totalGrossHematHariIni += trip.gross;
@@ -261,14 +261,10 @@ function prosesDanTampilkan() {
             prediksiPotonganHematOtomatis = Math.max(0, prediksiPotonganHematOtomatis - 100);
         }
 
-        // KUNCI PROTEKSI MATEMATIKA: Cek rasio potongan manual asli terhadap gross harian
         let inputManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
         let rasioPotonganHematManual = totalGrossHematHariIni > 0 ? (inputManualHariIni / totalGrossHematHariIni) : 0;
-        
-        // Kunci aktif jika hasil bagi di bawah sampai dengan 8% (<= 0.08)
         let kunciArgoMinimumAman = (rasioPotonganHematManual <= 0.08);
 
-        // FASE 2: Distribusi & Render Tabel Perjalanan
         dataHariIni.forEach((trip, index) => {
             totalGross += trip.gross;
             let potBaris = 0;
@@ -284,16 +280,13 @@ function prosesDanTampilkan() {
                     let totalManual = potonganHematManual[tanggalTerpilih];
                     
                     if (kunciArgoMinimumAman) {
-                        // KUNCI DIKUNCI: < 10200 mutlak Rp 0 potongan. Sisa dilempar ke argo besar.
                         if (trip.gross <= 10200) {
                             potBaris = 0;
                         } else {
-                            // Ditambahkan Math.round( ... / 100) * 100 agar hasil bagi kembali bulat ratusan
                             let hitungPotonganSaja = totalPrediksiArgoBesarSaja > 0 ? (trip.prediksiPotonganItem / totalPrediksiArgoBesarSaja) * totalManual : 0;
                             potBaris = Math.round(hitungPotonganSaja / 100) * 100;
                         }
                     } else {
-                        // KUNCI TERLEPAS (> 8%): Proporsional merata ke semua argo dengan pembulatan ratusan
                         let hitungPotonganSaja = prediksiPotonganHematOtomatis > 0 ? (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
                         potBaris = Math.round(hitungPotonganSaja / 100) * 100;
                     }
@@ -342,7 +335,6 @@ function prosesDanTampilkan() {
         document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotonganKombinasi).toLocaleString('id-ID')} (${persenTotal}%)`;
 
     } else {
-        // Mode Tab Rekap Mingguan / Bulanan
         boxPotongan.style.display = "none"; 
         boxSaran.style.display = "none"; 
         if (modeTampilan === 'minggu') {
@@ -399,75 +391,75 @@ function prosesDanTampilkan() {
         let totalPotKombinasiSeluruh = totalPotonganStandard + totalPotonganHemat;
         totalNet = totalGross - totalPotKombinasiSeluruh;
         
-        let persenHemat = totalGross > 0 ? ((totalPotonganHemat / totalGross) * 100).toFixed(1) : "0.0";
-        let persenTotal = totalGross > 0 ? ((totalPotonganKombinasiSeluruh / totalGross) * 100).toFixed(1) : "0.0";
-
-        document.getElementById('sumPotonganStandard').innerText = `Rp ${Math.floor(totalPotonganStandard).toLocaleString('id-ID')}`;
-        document.getElementById('sumPotonganHemat').innerText = `Rp ${Math.floor(totalPotonganHemat).toLocaleString('id-ID')} (${persenHemat}%)`;
+        let persenTotal = totalGross > 0 ? ((totalPotKombinasiSeluruh / totalGross) * 100).toFixed(1) : "0.0";
         document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotKombinasiSeluruh).toLocaleString('id-ID')} (${persenTotal}%)`;
+        document.getElementById('judulRingkasan').innerText = modeTampilan === 'minggu' ? 'Rekap Mingguan' : 'Rekap Bulanan';
     }
-    document.getElementById('totalOrder').innerText = totalOrder;
-    document.getElementById('sumGross').innerText = `Rp ${Math.floor(totalGross).toLocaleString('id-ID')}`;
+
+    // UPDATE: Render nilai ke elemen header statistik global
     document.getElementById('sumNet').innerText = `Rp ${Math.floor(totalNet).toLocaleString('id-ID')}`;
+    document.getElementById('sumGross').innerText = `Rp ${Math.floor(totalGross).toLocaleString('id-ID')}`;
+    document.getElementById('totalOrder').innerText = totalOrder;
 }
 
+// ================= UTILITAS BACKUP & MANAGEMENT DATA =================
 function exportDataKeJSON() {
-    let dataBkp = { masterData, potonganHematManual, databasePolaLevel };
-    let blob = new Blob([JSON.stringify(dataBkp)], { type: "application/json" });
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `backup_pembukuan_ojol_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
+    let dataBackup = { masterData, potonganHematManual, databasePolaLevel };
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataBackup));
+    let downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `backup_ojol_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
 }
 
-function pemicuPilihFileJSON() { document.getElementById('fileJSONInput').click(); }
+function pemicuPilihFileJSON() {
+    document.getElementById('fileJSONInput').click();
+}
 
-function importDataDariJSON(e) {
-    let file = e.target.files[0];
-    if (!file) return;
-    let reader = new FileReader();
-    reader.onload = function(evt) {
+function importDataDariJSON(event) {
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
         try {
-            let data = JSON.parse(evt.target.result);
-            let dataTrip = data.masterData || data.riwayatTrip || data;
-            let dataPotongan = data.potonganHematManual || data.potonganManual || {};
-            let dataPola = data.databasePolaLevel || {};
-
-            if (Array.isArray(dataTrip)) {
-                masterData = dataTrip;
-                potonganHematManual = dataPotongan;
-                databasePolaLevel = Object.keys(dataPola).length ? dataPola : databasePolaLevel;
-                localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
-                localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
-                localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
-                prosesDanTampilkan();
-                alert("Data berhasil dipulihkan!");
-            } else {
-                alert("Format data tidak cocok!");
-            }
-        } catch(err) { alert("File rusak atau tidak valid!"); }
-    };
-    reader.readAsText(file);
-}
-
-function resetData() {
-    if(confirm("Hapus semua riwayat di aplikasi ini?")) {
-        localStorage.clear(); masterData = []; potonganHematManual = {}; 
-        databasePolaLevel = { jawara: { argoMinDipotong: false, totalSampelHari: 0 }, ksatria: { argoMinDipotong: true, totalSampelHari: 0 }, pejuang: { argoMinDipotong: true, totalSampelHari: 0 }, anggota: { argoMinDipotong: true, totalSampelHari: 0 }};
-        prosesDanTampilkan();
+            let parsed = JSON.parse(e.target.result);
+            if (parsed.masterData) masterData = parsed.masterData;
+            if (parsed.potonganHematManual) potonganHematManual = parsed.potonganHematManual;
+            if (parsed.databasePolaLevel) databasePolaLevel = parsed.databasePolaLevel;
+            
+            localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+            localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+            localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
+            
+            alert("Data berhasil direstore!");
+            prosesDanTampilkan();
+        } catch(err) {
+            alert("File JSON tidak valid!");
+        }
     }
+    fileReader.readAsText(event.target.files[0]);
 }
 
 function downloadCSV() {
-    let csv = "ID_Trip,Tanggal,Layanan,Level_Driver,Argo_Kotor_Gross,Potongan_Aplikasi,Uang_Bersih_Net,Potongan_Manual_Harian\n";
-    masterData.forEach(t => { 
-        let potManualHariItu = potonganHematManual[t.tanggal] || 0;
-        let lvl = t.level_driver || "tidak_terekam";
-        csv += `${t.id},${t.tanggal},${t.layanan},${lvl},${t.gross},${t.potongan},${t.net},${potManualHariItu}\n`; 
+    let csvContent = "data:text/csv;charset=utf-8,Tanggal,Layanan,Level,Gross,Potongan,Net\n";
+    masterData.forEach(item => {
+        csvContent += `${item.tanggal},${item.layanan},${item.level_driver || '-'},${item.gross},${item.potongan},${item.net}\n`;
     });
-    let blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    let a = document.createElement("a"); 
-    a.href = URL.createObjectURL(blob);
-    a.download = `data_train_ojol_${new Date().toISOString().slice(0,10)}.csv`; 
-    a.click();
+    let encodedUri = encodeURI(csvContent);
+    let link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `pembukuan_ojol_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
+function resetData() {
+    if (confirm("Apakah Anda yakin ingin menghapus seluruh data permanen? Tindakan ini tidak bisa dibatalkan.")) {
+        localStorage.clear();
+        masterData = [];
+        potonganHematManual = {};
+        alert("Seluruh database telah dibersihkan.");
+        window.location.reload();
+    }
 }
