@@ -297,13 +297,13 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Tabel Riwayat Versi Modern Minim Garis Tebal */
+/* Tabel Riwayat Versi Modern (Tanpa overflow kaku) */
 .modern-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: var(--bg-surface);
     border-radius: 14px;
-    overflow: hidden;
     border: 1px solid var(--border-subtle);
 }
 .modern-table th, .modern-table td {
@@ -319,6 +319,13 @@ body {
     text-transform: uppercase;
     font-size: 11px;
 }
+
+/* Penjaga Kelengkungan Sudut Manual */
+.modern-table tr:first-child th:first-child { border-top-left-radius: 14px; }
+.modern-table tr:first-child th:last-child { border-top-right-radius: 14px; }
+.modern-table tr:last-child td:first-child { border-bottom-left-radius: 14px; }
+.modern-table tr:last-child td:last-child { border-bottom-right-radius: 14px; }
+
 .modern-table tr:last-child td {
     border-bottom: none;
 }
@@ -354,12 +361,14 @@ body {
     display: none;
     position: absolute;
     right: 12px;
+    bottom: 100%; /* Membuka ke arah atas agar tidak terpotong di baris bawah layar */
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    z-index: 200;
+    z-index: 999;
     min-width: 90px;
+    margin-bottom: 4px;
 }
 .dropdown-menu button {
     display: block;
