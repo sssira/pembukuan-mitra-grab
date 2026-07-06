@@ -133,7 +133,37 @@
 
 <script src="calc.js"></script>
 <script>
+    // Memulai pemrosesan data tepat setelah dokumen selesai dimuat
     window.addEventListener('DOMContentLoaded', inisialisasiData);
+
+    // Registrasi Service Worker untuk kapabilitas PWA & Auto Update di latar belakang
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker terdaftar aman!'))
+                .catch(err => console.error('Gagal daftar SW:', err));
+        });
+    }
+
+    // Penanganan Tombol Install PWA di Handphone
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.style.display = 'block';
+    });
+    installBtn.addEventListener('click', () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    installBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
+    });
 </script>
 </body>
 </html>
