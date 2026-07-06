@@ -16,7 +16,7 @@
             <h2>Pembukuan Trip Ojol</h2>
             <p id="judulRingkasan">Memuat Ringkasan...</p>
         </div>
-        <button id="installBtn" class="btn-install-modern">导 Install App</button>
+        <button id="installBtn" class="btn-install-modern">⬇️ Install App</button>
     </div>
 
     <div class="grid-stats">
@@ -57,7 +57,7 @@
 
     <div class="form-group-date">
         <div class="date-navigator-box">
-            <button class="nav-arrow" onclick="navigasiTanggal(-1)">鉀</button>
+            <button class="nav-arrow" onclick="navigasiTanggal(-1)">◀</button>
             <input type="date" id="tanggalTrip">
             <button class="nav-arrow" onclick="navigasiTanggal(1)">▶</button>
         </div>
@@ -114,10 +114,10 @@
             <div class="form-group-select">
                 <label for="levelDriverInput">Level Driver Anda:</label>
                 <select id="levelDriverInput" onchange="prosesDanTampilkan()">
-                    <option value="jawara">Jawara</option>
-                    <option value="ksatria">Ksatria</option>
-                    <option value="pejuang">Pejuang</option>
-                    <option value="anggota">Anggota</option>
+                    <option value="jawara">1. Jawara</option>
+                    <option value="ksatria">2. Ksatria</option>
+                    <option value="pejuang">3. Pejuang</option>
+                    <option value="anggota">4. Anggota</option>
                 </select>
             </div>
             <div class="action-grid-buttons">
@@ -169,6 +169,7 @@
         }
     }
 
+    // Fungsi label input murni asli
     function updateLabelInput() {
         const layanan = document.getElementById('jenisLayanan').value;
         const label = document.getElementById('labelArgo');
@@ -347,52 +348,53 @@
         let polaArgoMinDipotong = databasePolaLevel[levelDriver]?.argoMinDipotong;
 
         if (modeTampilan === 'hari') {
-            boxPotongan.style.display = "flex";
+            boxPotongan.style.display = "block";
             boxSaran.style.display = "block"; 
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             document.getElementById('judulRingkasan').innerText = `Tanggal: ${tanggalTerpilih}`;
             
             if (levelDriver === 'jawara' || !polaArgoMinDipotong) {
-                isiSaran.innerHTML = `Akun terdeteksi <b style='color:var(--color-grab)'>JAWARA</b> (Bebas potongan penyesuaian).<br>` + 
-                                     `🎯 Sikat habis orderan <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> untuk ritase instan tanpa pangkasan komisi.`;
+                isiSaran.innerHTML = `Akun terdeteksi <b style='color:var(--brand-grab)'>JAWARA</b> (Bebas potongan penyesuaian).<br>` + 
+                                     `🎯 Sikat habis orderan <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> untuk efisiensi bahan bakar dan perolehan ritase instan tanpa pangkasan komisi.`;
             } else {
                 isiSaran.innerHTML = `Akun terdeteksi terkena penyesuaian komisi pada tarif dasar.<br>` + 
-                                     `⚠️ Batasi mengambil Hemat minimum jika area macet. Targetkan orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan <b>Bike Standard</b>.`;
+                                     `⚠️ Batasi mengambil Hemat minimum jika area macet. Targetkan orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan <b>Bike Standard</b> untuk menjaga rasio profit harian.`;
             }
 
             let dataHariIni = masterData.filter(item => item.tanggal === tanggalTerpilih);
             totalOrder = dataHariIni.length;
             
-            let totalArgoHematKenaPotongPrediksi = 0;
-            let totalArgoHematBesarSaja = 0;
+            let totalGrossHematHariIni = 0;
             let prediksiPotonganHematOtomatis = 0;
+            let totalPrediksiArgoBesarSaja = 0;
 
-            // FASE 1: Klasifikasi & Perhitungan Rasio Prediksi Awal
+            // FASE 1: Hitung Prediksi Menggunakan Matematika Asli Anda (8% Floor)
             dataHariIni.forEach((trip) => {
                 if (trip.layanan === 'hemat') {
-                    totalArgoHematKenaPotongPrediksi += trip.gross;
-                    
-                    if (levelDriver === 'jawara' && trip.gross <= 10200) {
-                        trip.prediksiPotonganItem = 0;
-                    } else if (!polaArgoMinDipotong && trip.gross <= 10200) {
-                        trip.prediksiPotonganItem = 0;
+                    totalGrossHematHariIni += trip.gross;
+                    if (trip.gross <= 10200 && !polaArgoMinDipotong) {
+                        trip.prediksiPotonganItem = 0; 
                     } else {
-                        let hitungPotonganMentah = trip.gross * 0.05346;
-                        trip.prediksiPotonganItem = Math.round(hitungPotonganMentah / 100) * 100;
-                        totalArgoHematBesarSaja += trip.gross; // Akumulasi khusus argo besar (> 10200)
+                        let hitungPotonganMentah = trip.gross * 0.08;
+                        trip.prediksiPotonganItem = Math.floor(hitungPotonganMentah / 100) * 100; 
+                        totalPrediksiArgoBesarSaja += trip.prediksiPotonganItem; // Untuk pembagi argo besar saja jika aman
                     }
                     prediksiPotonganHematOtomatis += trip.prediksiPotonganItem;
                 }
             });
 
-            // Cek persentase potongan real-time input manual terhadap total kotor Hemat harian
-            let inputManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
-            let rasioPotonganAsli = totalArgoHematKenaPotongPrediksi > 0 ? (inputManualHariIni / totalArgoHematKenaPotongPrediksi) : 0;
-            
-            // KUNCI UTAMA: Jika rasio di bawah 8% (0.08), tandanya argo minimum mutlak aman (Bebas Potongan)
-            let argoMinWajibAman = (levelDriver === 'jawara' && rasioPotonganAsli < 0.08);
+            if (prediksiPotonganHematOtomatis > 0) {
+                prediksiPotonganHematOtomatis = Math.max(0, prediksiPotonganHematOtomatis - 100);
+            }
 
-            // FASE 2: Hitung Baris & Distribusi Fleksibel Bersyarat
+            // KUNCI PROTEKSI: Cek persentase potongan manual harian terhadap total kotor hemat harian
+            let inputManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
+            let rasioPotonganHematManual = totalGrossHematHariIni > 0 ? (inputManualHariIni / totalGrossHematHariIni) : 0;
+            
+            // Kunci proteksi aktif jika perhitungan persentase potongan manual di bawah sampai dengan 8% (<= 0.08)
+            let kunciArgoMinimumAman = (rasioPotonganHematManual <= 0.08);
+
+            // FASE 2: Distribusi & Render Tabel Perjalanan
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
                 let potBaris = 0;
@@ -408,33 +410,36 @@
                     if (potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0) {
                         let totalManual = potonganHematManual[tanggalTerpilih];
                         
-                        if (argoMinWajibAman) {
-                            // JIKA DI BAWAH 8%: Argo <= 10200 dipaksa Rp 0. Beban manual dilempar ke argo besar saja
+                        if (kunciArgoMinimumAman) {
+                            // JIKA DI BAWAH ATAU SAMA DENGAN 8%: Argo <= 10200 DIKUNCI MATI Rp 0.
                             if (trip.gross <= 10200) {
                                 potBaris = 0;
                             } else {
-                                potBaris = totalArgoHematBesarSaja > 0 ? Math.round((trip.gross / totalArgoHematBesarSaja) * totalManual) : 0;
+                                // Sisa potongan manual dilemparkan adil hanya ke orderan argo besar
+                                potBaris = totalPrediksiArgoBesarSaja > 0 ? (trip.prediksiPotonganItem / totalPrediksiArgoBesarSaja) * totalManual : 0;
                             }
                         } else {
-                            // JIKA MELENCHENG >= 8%: Kuncian lepas! Semua argo (termasuk Rp 10.200) ikut menanggung secara proporsional keseluruhan
-                            potBaris = totalArgoHematKenaPotongPrediksi > 0 ? Math.round((trip.gross / totalArgoHematKenaPotongPrediksi) * totalManual) : 0;
+                            // JIKA DI ATAS 8%: Kuncian terlepas! Gunakan perhitungan proporsional penuh matematika asli Anda
+                            potBaris = prediksiPotonganHematOtomatis > 0 ? (trip.prediksiPotonganItem / prediksiPotonganHematOtomatis) * totalManual : 0;
                         }
                     } else {
-                        // Jika belum ada input manual esok hari, pakai nilai prediksi otomatis di aplikasi Anda
+                        // Jika belum ada input manual esok hari, tampilkan prediksi otomatis presisi Anda
                         potBaris = trip.prediksiPotonganItem;
                     }
                     netBaris = trip.gross - potBaris;
-                    trip.net = netBaris; 
+                    trip.net = netBaris;
                     trip.potongan = potBaris;
                 }
 
                 let lencanaLayanan = trip.layanan === 'standard' ? `<span class="badge bg-standard">Standard</span>` : `<span class="badge bg-hemat">Hemat</span>`;
+                let argoTampil = trip.layanan === 'standard' ? Math.floor(trip.gross / 100) * 100 : trip.gross;
+                let potBarisTampil = trip.layanan === 'standard' ? argoTampil - trip.net : potBaris;
 
                 tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td>${lencanaLayanan}</td>
-                    <td>Rp ${Math.floor(trip.gross).toLocaleString('id-ID')}</td>
-                    <td class="text-danger">Rp ${Math.floor(potBaris).toLocaleString('id-ID')}</td>
+                    <td>Rp ${Math.floor(argoTampil).toLocaleString('id-ID')}</td>
+                    <td class="text-danger">Rp ${Math.floor(potBarisTampil).toLocaleString('id-ID')}</td>
                     <td class="text-success font-bold">Rp ${Math.floor(netBaris).toLocaleString('id-ID')}</td>
                     <td class="action-cell">
                         <button class="btn-gear" onclick="toggleDropdown(event, ${trip.id})">⚙️</button>
@@ -555,21 +560,14 @@
                 let dataPola = data.databasePolaLevel || {};
 
                 if (Array.isArray(dataTrip)) {
-                    masterData = dataTrip.map(item => {
-                        if (item.layanan === 'standard' && item.gross === item.net) {
-                            let hitungGrossUlang = item.net * (100 / 92);
-                            item.gross = Math.floor(hitungGrossUlang / 100) * 100;
-                            item.potongan = item.gross - item.net;
-                        }
-                        return item;
-                    });
+                    masterData = dataTrip;
                     potonganHematManual = dataPotongan;
                     databasePolaLevel = Object.keys(dataPola).length ? dataPola : databasePolaLevel;
                     localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
                     localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
                     localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
                     prosesDanTampilkan();
-                    alert("Data berhasil dipulihkan & kalkulasi baris diperbarui!");
+                    alert("Data berhasil dipulihkan!");
                 } else {
                     alert("Format data tidak cocok!");
                 }
