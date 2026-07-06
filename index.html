@@ -378,7 +378,6 @@
                         trip.prediksiPotonganItem = 0;
                     } else {
                         let hitungPotonganMentah = trip.gross * 0.05346;
-                        // Pembulatan ratusan ke bawah (Math.floor)
                         trip.prediksiPotonganItem = Math.floor(hitungPotonganMentah / 100) * 100;
                         totalArgoHematBesarSaja += trip.gross; 
                     }
@@ -550,8 +549,9 @@
                 let dataPola = data.databasePolaLevel || {};
 
                 if (Array.isArray(dataTrip)) {
+                    // MODIFIKASI: Pengecekan item.gross === item.net dihapus agar pembulatan ratusan selalu dijalankan ke semua riwayat standard lama
                     masterData = dataTrip.map(item => {
-                        if (item.layanan === 'standard' && item.gross === item.net) {
+                        if (item.layanan === 'standard') {
                             let hitungGrossUlang = item.net * (100 / 92);
                             item.gross = Math.floor(hitungGrossUlang / 100) * 100;
                             item.potongan = item.gross - item.net;
