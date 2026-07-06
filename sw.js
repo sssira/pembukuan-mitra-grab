@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-ojol-v2.1'; 
+const CACHE_NAME = 'trip-ojol-v2.2'; 
 const ASSETS = [
   './',
   './index.html',
