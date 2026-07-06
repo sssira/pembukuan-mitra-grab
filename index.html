@@ -57,7 +57,7 @@
 
     <div class="form-group-date">
         <div class="date-navigator-box">
-            <button class="nav-arrow" onclick="navigasiTanggal(-1)">鉀</button>
+            <button class="nav-arrow" onclick="navigasiTanggal(-1)">◀</button>
             <input type="date" id="tanggalTrip">
             <button class="nav-arrow" onclick="navigasiTanggal(1)">▶</button>
         </div>
@@ -256,9 +256,12 @@
 
     function toggleDropdown(event, idUnik) {
         event.stopPropagation();
+        const menuTerbuka = document.getElementById(`drop-${idUnik}`).style.display === "block";
         tutupSemuaDropdown();
-        const menu = document.getElementById(`drop-${idUnik}`);
-        if (menu) menu.style.display = "block";
+        if (!menuTerbuka) {
+            const menu = document.getElementById(`drop-${idUnik}`);
+            if (menu) menu.style.display = "block";
+        }
     }
 
     function tutupSemuaDropdown() {
@@ -367,32 +370,27 @@
             let totalArgoHematBesarSaja = 0;
             let prediksiPotonganHematOtomatis = 0;
 
-            // FASE 1: Klasifikasi & Perhitungan Rasio Prediksi Awal
             dataHariIni.forEach((trip) => {
                 if (trip.layanan === 'hemat') {
                     totalArgoHematKenaPotongPrediksi += trip.gross;
                     
-                    if (levelDriver === 'jawara' && trip.gross <= 10200) {
-                        trip.prediksiPotonganItem = 0;
-                    } else if (!polaArgoMinDipotong && trip.gross <= 10200) {
+                    if ((levelDriver === 'jawara' || !polaArgoMinDipotong) && trip.gross <= 10200) {
                         trip.prediksiPotonganItem = 0;
                     } else {
                         let hitungPotonganMentah = trip.gross * 0.05346;
-                        trip.prediksiPotonganItem = Math.round(hitungPotonganMentah / 100) * 100;
-                        totalArgoHematBesarSaja += trip.gross; // Akumulasi khusus argo besar (> 10200)
+                        // Pembulatan ratusan ke bawah (Math.floor)
+                        trip.prediksiPotonganItem = Math.floor(hitungPotonganMentah / 100) * 100;
+                        totalArgoHematBesarSaja += trip.gross; 
                     }
                     prediksiPotonganHematOtomatis += trip.prediksiPotonganItem;
                 }
             });
 
-            // Cek persentase potongan real-time input manual terhadap total kotor Hemat harian
             let inputManualHariIni = potonganHematManual[tanggalTerpilih] || 0;
             let rasioPotonganAsli = totalArgoHematKenaPotongPrediksi > 0 ? (inputManualHariIni / totalArgoHematKenaPotongPrediksi) : 0;
             
-            // KUNCI UTAMA: Jika rasio di bawah 8% (0.08), tandanya argo minimum mutlak aman (Bebas Potongan)
             let argoMinWajibAman = (levelDriver === 'jawara' && rasioPotonganAsli < 0.08);
 
-            // FASE 2: Hitung Baris & Distribusi Fleksibel Bersyarat
             dataHariIni.forEach((trip, index) => {
                 totalGross += trip.gross;
                 let potBaris = 0;
@@ -404,23 +402,21 @@
                     potBaris = trip.potongan;
                     netBaris = trip.net;
                 } else {
-                    // LAYANAN HEMAT
                     if (potonganHematManual[tanggalTerpilih] !== undefined && potonganHematManual[tanggalTerpilih] !== 0) {
                         let totalManual = potonganHematManual[tanggalTerpilih];
                         
                         if (argoMinWajibAman) {
-                            // JIKA DI BAWAH 8%: Argo <= 10200 dipaksa Rp 0. Beban manual dilempar ke argo besar saja
                             if (trip.gross <= 10200) {
                                 potBaris = 0;
                             } else {
-                                potBaris = totalArgoHematBesarSaja > 0 ? Math.round((trip.gross / totalArgoHematBesarSaja) * totalManual) : 0;
+                                let hitungPropropional = (trip.gross / totalArgoHematBesarSaja) * totalManual;
+                                potBaris = totalArgoHematBesarSaja > 0 ? Math.floor(hitungPropropional / 100) * 100 : 0;
                             }
                         } else {
-                            // JIKA MELENCHENG >= 8%: Kuncian lepas! Semua argo (termasuk Rp 10.200) ikut menanggung secara proporsional keseluruhan
-                            potBaris = totalArgoHematKenaPotongPrediksi > 0 ? Math.round((trip.gross / totalArgoHematKenaPotongPrediksi) * totalManual) : 0;
+                            let hitungPropropional = (trip.gross / totalArgoHematKenaPotongPrediksi) * totalManual;
+                            potBaris = totalArgoHematKenaPotongPrediksi > 0 ? Math.floor(hitungPropropional / 100) * 100 : 0;
                         }
                     } else {
-                        // Jika belum ada input manual esok hari, pakai nilai prediksi otomatis di aplikasi Anda
                         potBaris = trip.prediksiPotonganItem;
                     }
                     netBaris = trip.gross - potBaris;
@@ -463,7 +459,6 @@
             document.getElementById('sumPotonganTotal').innerText = `Rp ${Math.floor(totalPotonganKombinasi).toLocaleString('id-ID')} (${persenTotal}%)`;
 
         } else {
-            // Mode Tab Mingguan / Bulanan
             boxPotongan.style.display = "none"; 
             boxSaran.style.display = "none"; 
             if (modeTampilan === 'minggu') {
