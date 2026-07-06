@@ -1,15 +1,13 @@
-const CACHE_NAME = 'trip-ojol-v4.1'; 
+const CACHE_NAME = 'trip-ojol-v4.3'; // Naikkan versi karena ada perubahan CSS kemarin
 const ASSETS = [
   './',
   './index.html',
-  './calc.js',
   './style.css',
   './manifest.json'
 ];
 
-// Install Service Worker - Mengunduh aset awal ke penyimpanan cache local HP
+// Install Service Worker
 self.addEventListener('install', (e) => {
-  self.skipWaiting(); // Langsung aktifkan SW baru tanpa menahan sesi aplikasi tua
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -17,7 +15,7 @@ self.addEventListener('install', (e) => {
   );
 });
 
-// Activate Service Worker - Pembersihan otomatis sampah cache versi lama
+// Activate Service Worker
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -28,28 +26,15 @@ self.addEventListener('activate', (e) => {
           }
         })
       );
-    }).then(() => self.clients.claim()) // Ambil kendali halaman aktif seketika
+    })
   );
 });
 
-// Fetch Handler - Strategi Pintar: Memuat dari Cache sembari meng-update aset dari jaringan GitHub di background
+// Fetch Handler (Strategi: Cache First, Fallback to Network)
 self.addEventListener('fetch', (e) => {
-  if (!e.request.url.startsWith(self.location.origin)) return;
-
   e.respondWith(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.match(e.request).then((cachedResponse) => {
-        const fetchedResponse = fetch(e.request).then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            cache.put(e.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => {
-          // Tetap aman saat digunakan offline di jalan raya tanpa sinyal internet
-        });
-
-        return cachedResponse || fetchedResponse;
-      });
+    caches.match(e.request).then((cachedResponse) => {
+      return cachedResponse || fetch(e.request);
     })
   );
 });
