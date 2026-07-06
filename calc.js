@@ -1,6 +1,6 @@
 /**
  * Core Matematika & Manajemen Data Aplikasi Pembukuan Ojol
- * Seluruh rumus perhitungan dikunci di sini agar mudah edited.
+ * Seluruh rumus perhitungan dikunci di sini agar mudah diedit.
  */
 
 let masterData = [];
