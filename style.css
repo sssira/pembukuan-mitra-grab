@@ -73,7 +73,7 @@ body {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    display: none;
+    display: none; /* Otomatis muncul via JS saat siap diinstall */
 }
 
 /* Grid Kartu Statistik (Efek Floating Card & Elegan) */
@@ -325,10 +325,7 @@ body {
 .modern-table tr:first-child th:last-child { border-top-right-radius: 14px; }
 .modern-table tr:last-child td:first-child { border-bottom-left-radius: 14px; }
 .modern-table tr:last-child td:last-child { border-bottom-right-radius: 14px; }
-
-.modern-table tr:last-child td {
-    border-bottom: none;
-}
+.modern-table tr:last-child td { border-bottom: none; }
 
 /* Desain Badge Tag Tipis & Bersih */
 .badge {
@@ -361,7 +358,7 @@ body {
     display: none;
     position: absolute;
     right: 12px;
-    bottom: 100%; /* Membuka ke arah atas agar tidak terpotong di baris bawah layar */
+    bottom: 100%; 
     background: var(--bg-surface-elevated);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
