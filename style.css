@@ -63,6 +63,7 @@ body {
     margin: 2px 0 0 0;
     font-size: 13px;
     color: var(--text-secondary);
+    line-height: 1.4;
 }
 .btn-install-modern {
     background: var(--bg-surface-elevated);
@@ -73,7 +74,7 @@ body {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    display: none; /* Otomatis muncul via JS saat siap diinstall */
+    display: none; 
 }
 
 /* Grid Kartu Statistik (Efek Floating Card & Elegan) */
@@ -297,7 +298,7 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Tabel Riwayat Versi Modern (Tanpa overflow kaku) */
+/* Tabel Riwayat Versi Modern */
 .modern-table {
     width: 100%;
     border-collapse: separate;
