@@ -313,10 +313,16 @@
     }
 
     function getAwalMinggu(d) {
-        let date = new Date(d);
+        let parts = d.split('-');
+        let date = new Date(parts[0], parts[1] - 1, parts[2]);
         let day = date.getDay();
-        let diff = date.getDate() - day + (day == 0 ? -6 : 1); 
-        return new Date(date.setDate(diff)).toISOString().slice(0,10);
+        let diff = date.getDate() - day + (day === 0 ? -6 : 1); 
+        date.setDate(diff);
+        
+        let yyyy = date.getFullYear();
+        let mm = String(date.getMonth() + 1).padStart(2, '0');
+        let dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
     }
 
     function latihDatabaseKecerdasan() {
@@ -354,7 +360,7 @@
 
         if (totalHariValidasi > 0) {
             databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni === 'jawara') ? false : (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
-            databasePolaLevel[levelSaatIni].totalSampelHari = totalHariValidasi; // FIXED: Memperbaiki crash levelSpentHarian
+            databasePolaLevel[levelSaatIni].totalSampelHari = totalHariValidasi; 
         } else {
             databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni !== 'jawara');
             databasePolaLevel[levelSaatIni].totalSampelHari = 0;
@@ -414,19 +420,18 @@
             boxPotongan.style.display = "none";
             boxSaran.style.display = "none";
             let awalMinggu = getAwalMinggu(tanggalTerpilih);
-            document.getElementById('judulRingkasan').innerText = `Minggu (Mulai: ${awalMinggu})`;
+            header.innerHTML = `<th>No</th><th>Tanggal</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             dataTampil = masterData.filter(item => getAwalMinggu(item.tanggal) === awalMinggu);
         } else if (modeTampilan === 'bulan') {
             boxPotongan.style.display = "none";
             boxSaran.style.display = "none";
             let bulanTerpilih = tanggalTerpilih.slice(0, 7);
-            document.getElementById('judulRingkasan').innerText = `Bulan: ${bulanTerpilih}`;
+            header.innerHTML = `<th>No</th><th>Tanggal</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             dataTampil = masterData.filter(item => item.tanggal.slice(0, 7) === bulanTerpilih);
         }
 
         totalOrder = dataTampil.length;
 
-        // --- PRE-KALKULASI DATA PER TANGGAL (Untuk Menjaga Akurasi Filter Silang Tampilan) ---
         let argoHematPerHari = {};
         let totalTripHematKenaPotongPerHari = {};
         
@@ -445,7 +450,6 @@
 
         let counterHematKenaPotongPerHari = {};
         let sisaPotonganManualPerHari = { ...potonganHematManual };
-        // ----------------------------------------------------------------------------------
 
         dataTampil.forEach((trip, index) => {
             let potBaris = 0;
@@ -466,7 +470,6 @@
                     } else {
                         counterHematKenaPotongPerHari[tgl] = (counterHematKenaPotongPerHari[tgl] || 0) + 1;
                         
-                        // JIKA TRIP TERAKHIR DI HARI ITU: Sikat sisa saldo potongan manual agar jaminan pas
                         if (counterHematKenaPotongPerHari[tgl] === totalTripHematKenaPotongPerHari[tgl]) {
                             potBaris = sisaPotonganManualPerHari[tgl];
                         } else {
@@ -502,8 +505,11 @@
                 `<span class="badge bg-standard">Standard</span>` : 
                 `<span class="badge bg-hemat">Hemat</span>`;
 
+            let tdTanggal = modeTampilan === 'hari' ? '' : `<td>${trip.tanggal}</td>`;
+
             let row = `<tr>
                 <td>${index + 1}</td>
+                ${tdTanggal}
                 <td>${layananBadge}</td>
                 <td>Rp ${trip.gross.toLocaleString('id-ID')}</td>
                 <td class="text-danger">Rp ${potBaris.toLocaleString('id-ID')}</td>
@@ -524,10 +530,18 @@
         document.getElementById('totalOrder').innerText = totalOrder;
         document.getElementById('sumPotonganStandard').innerText = `Rp ${totalPotonganStandard.toLocaleString('id-ID')}`;
         document.getElementById('sumPotonganHemat').innerText = `Rp ${totalPotonganHemat.toLocaleString('id-ID')}`;
-        document.getElementById('sumPotonganTotal').innerText = `Rp ${(totalPotonganStandard + totalPotonganHemat).toLocaleString('id-ID')}`;
+        
+        let totalSemuaPotongan = totalPotonganStandard + totalPotonganHemat;
+        document.getElementById('sumPotonganTotal').innerText = `Rp ${totalSemuaPotongan.toLocaleString('id-ID')}`;
         
         if (modeTampilan === 'hari') {
             document.getElementById('potonganAsliInput').placeholder = `Prediksi: Rp ${totalPotonganHemat.toLocaleString('id-ID')}`;
+        } else if (modeTampilan === 'minggu') {
+            let awalMinggu = getAwalMinggu(tanggalTerpilih);
+            document.getElementById('judulRingkasan').innerHTML = `Minggu (Mulai Senin: ${awalMinggu})<br><span class="text-danger font-bold" style="font-size: 11.5px;">Total Potongan Minggu Ini: Rp ${totalSemuaPotongan.toLocaleString('id-ID')}</span>`;
+        } else if (modeTampilan === 'bulan') {
+            let bulanTerpilih = tanggalTerpilih.slice(0, 7);
+            document.getElementById('judulRingkasan').innerHTML = `Bulan (Mulai Tgl 1): ${bulanTerpilih}<br><span class="text-danger font-bold" style="font-size: 11.5px;">Total Potongan Bulan Ini: Rp ${totalSemuaPotongan.toLocaleString('id-ID')}</span>`;
         }
     }
 
