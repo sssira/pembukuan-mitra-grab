@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-ojol-v4.5'; // Dinaikkan ke v4.5 demi pembaruan sinkronisasi kalkulasi core mesin harian
+const CACHE_NAME = 'trip-ojol-v4.6'; 
 const ASSETS = [
   './',
   './index.html',
