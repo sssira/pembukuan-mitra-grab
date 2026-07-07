@@ -347,3 +347,262 @@
                 // Hanya melatih rasio dari argo yang memang valid terkena potongan (>10200 jika Jawara)
                 let totalGrossHematHariItu = tripHematHariItu
                     .filter(item => item.gross > 10200 || (levelSaatIni !== 'jawara'))
+                    .reduce((acc, current) => acc + current.gross, 0);
+
+                if(totalGrossHematHariItu > 0 && potonganAsliHariItu > 0) {
+                    totalRasioPersen += (potonganAsliHariItu / totalGrossHematHariItu);
+                    hariValidRasio++;
+                }
+            }
+        });
+
+        if (totalHariValidasi > 0) {
+            databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni === 'jawara') ? false : (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
+            databasePolaLevel[levelSaatIni].totalSampelHari = totalHariValidasi;
+        } else {
+            databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni !== 'jawara');
+            databasePolaLevel[levelSaatIni].totalSampelHari = 0;
+        }
+
+        if(hariValidRasio > 0) {
+            let hasilLatih = totalRasioPersen / hariValidRasio;
+            databasePolaLevel[levelSaatIni].persenPotonganHemat = hasilLatih > 0.08 ? 0.08 : hasilLatih;
+        } else {
+            databasePolaLevel[levelSaatIni].persenPotonganHemat = (levelSaatIni === 'jawara') ? 0.0735 : 0.076;
+        }
+
+        localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
+    }
+
+    function prosesDanTampilkan() {
+        const tbody = document.querySelector('#tabelTrip tbody');
+        const header = document.getElementById('headerTabel');
+        const boxPotongan = document.getElementById('boxPotonganAsliHemat');
+        const boxSaran = document.getElementById('boxRekomendasiArgo');
+        const isiSaran = document.getElementById('isiRekomendasi');
+        tbody.innerHTML = '';
+
+        let totalGross = 0, totalNet = 0, totalOrder = 0;
+        let totalPotonganStandard = 0, totalPotonganHemat = 0;
+        
+        const tanggalTerpilih = document.getElementById('tanggalTrip').value;
+        const levelDriver = document.getElementById('levelDriverInput').value;
+        
+        let polaArgoMinDipotong = databasePolaLevel[levelDriver]?.argoMinDipotong;
+        let pengaliPersenHemat = databasePolaLevel[levelDriver]?.persenPotonganHemat || 0.0735;
+
+        let dataTampil = [];
+
+        if (modeTampilan === 'hari') {
+            boxPotongan.style.display = "flex";
+            boxSaran.style.display = "block"; 
+            header.innerHTML = `<th>No</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
+            document.getElementById('judulRingkasan').innerText = `Tanggal: ${tanggalTerpilih}`;
+            
+            if (levelDriver === 'jawara') {
+                isiSaran.innerHTML = `Akun terdeteksi <b style='color:#00b14f'>JAWARA</b> (Bebas potongan penyesuaian argo minimum).<br>` + 
+                                     `🎯 Sikat habis orderan <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> untuk ritase instan tanpa pangkasan komisi harian.`;
+            } else {
+                isiSaran.innerHTML = `Akun non-jawara terdeteksi penyesuaian komisi pada tarif dasar harian.<br>` + 
+                                     `⚠️ Batasi mengambil Hemat minimum jika area macet. Targetkan orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan <b>Bike Standard</b>.`;
+            }
+
+            dataTampil = masterData.filter(item => item.tanggal === tanggalTerpilih);
+        } else if (modeTampilan === 'minggu') {
+            boxPotongan.style.display = "none";
+            boxSaran.style.display = "none";
+            let awalMinggu = getAwalMinggu(tanggalTerpilih);
+            document.getElementById('judulRingkasan').innerText = `Minggu (Mulai: ${awalMinggu})`;
+            dataTampil = masterData.filter(item => getAwalMinggu(item.tanggal) === awalMinggu);
+        } else if (modeTampilan === 'bulan') {
+            boxPotongan.style.display = "none";
+            boxSaran.style.display = "none";
+            let bulanTerpilih = tanggalTerpilih.slice(0, 7);
+            document.getElementById('judulRingkasan').innerText = `Bulan: ${bulanTerpilih}`;
+            dataTampil = masterData.filter(item => item.tanggal.slice(0, 7) === bulanTerpilih);
+        }
+
+        totalOrder = dataTampil.length;
+
+        // KUNCI BLOKIR: Jika Jawara, argo <= 10200 TIDAK BOLEH dihitung dalam pembagian beban potongan manual harian
+        let totalArgoHematKenaPotong = dataTampil
+            .filter(t => t.layanan === 'hemat' && (t.gross > 10200 || (polaArgoMinDipotong && levelDriver !== 'jawara')))
+            .reduce((a, b) => a + b.gross, 0);
+
+        dataTampil.forEach((trip, index) => {
+            let potBaris = 0;
+
+            if (trip.layanan === 'standard') {
+                potBaris = trip.potongan;
+                totalPotonganStandard += potBaris;
+            } else { 
+                // LAYANAN HEMAT
+                if (potonganHematManual[tanggalTerpilih] !== undefined) {
+                    // MODE HITUNG REAL (MANUAL INPUT BESOK PAGI)
+                    if (trip.gross <= 10200 && levelDriver === 'jawara') {
+                        potBaris = 0;
+                    } else if (trip.gross <= 10200 && !polaArgoMinDipotong) {
+                        potBaris = 0;
+                    } else {
+                        let hitungProp = (trip.gross / (totalArgoHematKenaPotong || 1)) * potonganHematManual[tanggalTerpilih];
+                        potBaris = Math.floor(hitungProp / 100) * 100;
+                    }
+                } else {
+                    // MODE PREDIKSI OTOMATIS (UP TO 8% DENGAN RASIO JAWARA 7.35%)
+                    if (trip.gross > 10200) {
+                        let hitungPotonganMentah = trip.gross * pengaliPersenHemat;
+                        potBaris = Math.floor(hitungPotonganMentah / 100) * 100;
+                        
+                        let batasMaksimal = Math.floor(trip.gross * 0.08);
+                        if (potBaris > batasMaksimal) potBaris = batasMaksimal;
+                    } else {
+                        if (levelDriver === 'jawara' || !polaArgoMinDipotong) {
+                            potBaris = 0;
+                        } else {
+                            let hitungPotonganMentah = trip.gross * pengaliPersenHemat;
+                            potBaris = Math.floor(hitungPotonganMentah / 100) * 100;
+                        }
+                    }
+                }
+                totalPotonganHemat += potBaris;
+            }
+
+            let netBaris = trip.gross - potBaris;
+            totalGross += trip.gross;
+            totalNet += netBaris;
+
+            let row = `<tr>
+                <td>${index + 1}</td>
+                <td><b>${trip.layanan === 'standard' ? 'Standard' : 'Hemat'}</b></td>
+                <td>Rp ${trip.gross.toLocaleString('id-ID')}</td>
+                <td class="text-danger">Rp ${potBaris.toLocaleString('id-ID')}</td>
+                <td style="color:#00b14f; font-weight:bold;">Rp ${netBaris.toLocaleString('id-ID')}</td>
+                <td>
+                    <div style="position:relative; display:inline-block;">
+                        <button onclick="toggleDropdown(event, '${trip.id}')" style="background:none; border:none; cursor:pointer; font-weight:bold; font-size:16px;">⋮</button>
+                        <div id="drop-${trip.id}" class="dropdown-menu" style="display:none; position:absolute; right:0; background:#fff; border:1px solid #ccc; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100; min-width:90px;">
+                            <button onclick="editBaris('${trip.id}')" style="display:block; width:100%; text-align:left; background:none; border:none; padding:8px 12px; cursor:pointer;">📝 Edit</button>
+                            <button onclick="hapusBaris('${trip.id}')" style="display:block; width:100%; text-align:left; background:none; border:none; padding:8px 12px; cursor:pointer; color:red;">🗑️ Hapus</button>
+                        </div>
+                    </div>
+                </td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+
+        document.getElementById('sumNet').innerText = `Rp ${totalNet.toLocaleString('id-ID')}`;
+        document.getElementById('sumGross').innerText = `Rp ${totalGross.toLocaleString('id-ID')}`;
+        document.getElementById('totalOrder').innerText = totalOrder;
+        document.getElementById('sumPotonganStandard').innerText = `Rp ${totalPotonganStandard.toLocaleString('id-ID')}`;
+        document.getElementById('sumPotonganHemat').innerText = `Rp ${totalPotonganHemat.toLocaleString('id-ID')}`;
+        document.getElementById('sumPotonganTotal').innerText = `Rp ${(totalPotonganStandard + totalPotonganHemat).toLocaleString('id-ID')}`;
+        
+        if (modeTampilan === 'hari') {
+            document.getElementById('potonganAsliInput').placeholder = `Prediksi: Rp ${totalPotonganHemat.toLocaleString('id-ID')}`;
+        }
+    }
+
+    function exportDataKeJSON() {
+        if(masterData.length === 0) return alert("Tidak ada data untuk dibackup!");
+        // PEMBARUAN: Menyimpan paket data utuh terstruktur agar aman di masa depan
+        const paketBackupUtuh = {
+            masterData: masterData,
+            potonganHematManual: potonganHematManual,
+            databasePolaLevel: databasePolaLevel
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(paketBackupUtuh));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `backup_lengkap_ojol_${document.getElementById('tanggalTrip').value}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function pemicuPilihFileJSON() {
+        document.getElementById('fileJSONInput').click();
+    }
+
+    function importDataDariJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const dataDiimport = JSON.parse(e.target.result);
+                
+                // STRATEGI 1: Mendeteksi format Paket Lengkap (Objek Berstruktur)
+                if (dataDiimport && typeof dataDiimport === 'object' && !Array.isArray(dataDiimport)) {
+                    if (dataDiimport.masterData && Array.isArray(dataDiimport.masterData)) {
+                        masterData = dataDiimport.masterData;
+                        
+                        if (dataDiimport.potonganHematManual) {
+                            potonganHematManual = dataDiimport.potonganHematManual;
+                        }
+                        
+                        if (dataDiimport.databasePolaLevel) {
+                            let defaultPersen = { jawara: 0.0735, ksatria: 0.075, pejuang: 0.076, anggota: 0.080 };
+                            databasePolaLevel = dataDiimport.databasePolaLevel;
+                            for (let lvl in databasePolaLevel) {
+                                if (databasePolaLevel[lvl] && databasePolaLevel[lvl].persenPotonganHemat === undefined) {
+                                    databasePolaLevel[lvl].persenPotonganHemat = defaultPersen[lvl] || 0.075;
+                                }
+                            }
+                        }
+                        
+                        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+                        localStorage.setItem('potonganHematManualOjol', JSON.stringify(potonganHematManual));
+                        localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
+                        
+                        latihDatabaseKecerdasan();
+                        prosesDanTampilkan();
+                        alert("✅ Sukses Migrasi! Seluruh riwayat trip, potongan harian, dan kalkulasi level berhasil dipulihkan.");
+                        return;
+                    }
+                }
+                
+                // STRATEGI 2: Mendeteksi format Cadangan Lama (Hanya Array Riwayat)
+                if (Array.isArray(dataDiimport)) {
+                    masterData = dataDiimport;
+                    localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+                    latihDatabaseKecerdasan();
+                    prosesDanTampilkan();
+                    alert("✅ Riwayat Trip Berhasil Di-restore (Format Array)!");
+                } else {
+                    alert("Format berkas JSON tidak dikenali oleh sistem pembukuan.");
+                }
+            } catch (err) {
+                alert("Gagal membaca berkas JSON!");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function downloadCSV() {
+        if(masterData.length === 0) return alert("Tidak ada data untuk diunduh!");
+        let csvContent = "data:text/csv;charset=utf-8,No,Tanggal,Layanan,Argo Kotor,Net\n";
+        masterData.forEach((item, index) => {
+            csvContent += `${index + 1},${item.tanggal},${item.layanan},${item.gross},${item.net}\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `laporan_ojol_${document.getElementById('tanggalTrip').value}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    function resetData() {
+        if (confirm("⚠️ PERINGATAN! Anda akan menghapus SELURUH riwayat trip. Data yang terhapus tidak bisa dikembalikan. Lanjutkan?")) {
+            masterData = [];
+            potonganHematManual = {};
+            localStorage.removeItem('masterDataOjol');
+            localStorage.removeItem('potonganHematManualOjol');
+            prosesDanTampilkan();
+            alert("Semua data telah dibersihkan.");
+        }
+    }
+</script>
+</body>
+</html>
