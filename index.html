@@ -354,7 +354,7 @@
 
         if (totalHariValidasi > 0) {
             databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni === 'jawara') ? false : (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
-            databasePolaLevel[levelSpentHarian] = totalHariValidasi;
+            databasePolaLevel[levelSaatIni].totalSampelHari = totalHariValidasi; // FIXED: Memperbaiki crash levelSpentHarian
         } else {
             databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni !== 'jawara');
             databasePolaLevel[levelSaatIni].totalSampelHari = 0;
@@ -395,11 +395,10 @@
             header.innerHTML = `<th>No</th><th>Layanan</th><th>Argo</th><th>Potongan</th><th>Net</th><th>Aksi</th>`;
             document.getElementById('judulRingkasan').innerText = `Tanggal: ${tanggalTerpilih}`;
             
-            // PERBAIKAN UTAMA: Sinkronisasi nilai input potongan harian agar unik per tanggal
             if (potonganHematManual[tanggalTerpilih] !== undefined) {
                 document.getElementById('potonganAsliInput').value = potonganHematManual[tanggalTerpilih];
             } else {
-                document.getElementById('potonganAsliInput').value = ''; // Kosongkan jika hari baru belum diisi
+                document.getElementById('potonganAsliInput').value = ''; 
             }
 
             if (levelDriver === 'jawara') {
@@ -427,38 +426,67 @@
 
         totalOrder = dataTampil.length;
 
-        let totalArgoHematKenaPotong = dataTampil
-            .filter(t => t.layanan === 'hemat' && (t.gross > 10200 || (polaArgoMinDipotong && levelDriver !== 'jawara')))
-            .reduce((a, b) => a + b.gross, 0);
+        // --- PRE-KALKULASI DATA PER TANGGAL (Untuk Menjaga Akurasi Filter Silang Tampilan) ---
+        let argoHematPerHari = {};
+        let totalTripHematKenaPotongPerHari = {};
+        
+        masterData.forEach(t => {
+            let tgl = t.tanggal;
+            let lvl = t.level_driver || levelDriver;
+            let pMin = databasePolaLevel[lvl]?.argoMinDipotong;
+            if (t.layanan === 'hemat') {
+                let kenaPotong = (t.gross > 10200 || (pMin && lvl !== 'jawara'));
+                if (kenaPotong) {
+                    argoHematPerHari[tgl] = (argoHematPerHari[tgl] || 0) + t.gross;
+                    totalTripHematKenaPotongPerHari[tgl] = (totalTripHematKenaPotongPerHari[tgl] || 0) + 1;
+                }
+            }
+        });
+
+        let counterHematKenaPotongPerHari = {};
+        let sisaPotonganManualPerHari = { ...potonganHematManual };
+        // ----------------------------------------------------------------------------------
 
         dataTampil.forEach((trip, index) => {
             let potBaris = 0;
+            let tgl = trip.tanggal;
+            let lvl = trip.level_driver || levelDriver;
+            let pMin = databasePolaLevel[lvl]?.argoMinDipotong;
+            let pengali = databasePolaLevel[lvl]?.persenPotonganHemat || 0.0735;
 
             if (trip.layanan === 'standard') {
                 potBaris = trip.potongan;
                 totalPotonganStandard += potBaris;
             } else { 
-                if (potonganHematManual[tanggalTerpilih] !== undefined) {
-                    if (trip.gross <= 10200 && levelDriver === 'jawara') {
+                if (potonganHematManual[tgl] !== undefined) {
+                    if (trip.gross <= 10200 && lvl === 'jawara') {
                         potBaris = 0;
-                    } else if (trip.gross <= 10200 && !polaArgoMinDipotong) {
+                    } else if (trip.gross <= 10200 && !pMin) {
                         potBaris = 0;
                     } else {
-                        let hitungProp = (trip.gross / (totalArgoHematKenaPotong || 1)) * potonganHematManual[tanggalTerpilih];
-                        potBaris = Math.floor(hitungProp / 100) * 100;
+                        counterHematKenaPotongPerHari[tgl] = (counterHematKenaPotongPerHari[tgl] || 0) + 1;
+                        
+                        // JIKA TRIP TERAKHIR DI HARI ITU: Sikat sisa saldo potongan manual agar jaminan pas
+                        if (counterHematKenaPotongPerHari[tgl] === totalTripHematKenaPotongPerHari[tgl]) {
+                            potBaris = sisaPotonganManualPerHari[tgl];
+                        } else {
+                            let hitungProp = (trip.gross / (argoHematPerHari[tgl] || 1)) * potonganHematManual[tgl];
+                            potBaris = Math.floor(hitungProp / 100) * 100;
+                            sisaPotonganManualPerHari[tgl] -= potBaris;
+                        }
                     }
                 } else {
                     if (trip.gross > 10200) {
-                        let hitungPotonganMentah = trip.gross * pengaliPersenHemat;
+                        let hitungPotonganMentah = trip.gross * pengali;
                         potBaris = Math.floor(hitungPotonganMentah / 100) * 100;
                         
                         let batasMaksimal = Math.floor(trip.gross * 0.08);
                         if (potBaris > batasMaksimal) potBaris = batasMaksimal;
                     } else {
-                        if (levelDriver === 'jawara' || !polaArgoMinDipotong) {
+                        if (lvl === 'jawara' || !pMin) {
                             potBaris = 0;
                         } else {
-                            let hitungPotonganMentah = trip.gross * pengaliPersenHemat;
+                            let hitungPotonganMentah = trip.gross * pengali;
                             potBaris = Math.floor(hitungPotonganMentah / 100) * 100;
                         }
                     }
