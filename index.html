@@ -264,7 +264,7 @@
         latihDatabaseKecerdasan();
         inputArgo.value = '';
         inputArgo.focus();
-        gantiTampilan('hari');
+        prosesDanTampilkan();
     }
 
     function toggleDropdown(event, idUnik) {
@@ -282,9 +282,10 @@
     }
 
     function editBaris(idUnik) {
-        const item = masterData.find(t => t.id === idUnik);
+        const idNumeric = Number(idUnik); // Mengonversi ID string kembali ke Number
+        const item = masterData.find(t => t.id === idNumeric);
         if (!item) return;
-        idDataSedangDiedit = idUnik;
+        idDataSedangDiedit = idNumeric;
         document.getElementById('tanggalTrip').value = item.tanggal;
         document.getElementById('jenisLayanan').value = item.layanan;
         if(item.level_driver) document.getElementById('levelDriverInput').value = item.level_driver;
@@ -296,7 +297,8 @@
 
     function hapusBaris(idUnik) {
         if (confirm("Hapus data trip ini?")) {
-            masterData = masterData.filter(item => item.id !== idUnik);
+            const idNumeric = Number(idUnik); // Mengonversi ID string kembali ke Number
+            masterData = masterData.filter(item => item.id !== idNumeric);
             localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
             latihDatabaseKecerdasan();
             prosesDanTampilkan();
@@ -312,6 +314,7 @@
         prosesDanTampilkan();
     }
 
+    // ... sisa fungsi JavaScript Anda tetap sama dan aman ...
     function getAwalMinggu(d) {
         let parts = d.split('-');
         let date = new Date(parts[0], parts[1] - 1, parts[2]);
