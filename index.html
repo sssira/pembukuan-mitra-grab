@@ -49,20 +49,6 @@
         </div>
     </div>
 
-    <div class="tabs-modern">
-        <button class="tab-btn-modern active" id="tabHari" onclick="gantiTampilan('hari')">Hari</button>
-        <button class="tab-btn-modern" id="tabMinggu" onclick="gantiTampilan('minggu')">Minggu</button>
-        <button class="tab-btn-modern" id="tabBulan" onclick="gantiTampilan('bulan')">Bulan</button>
-    </div>
-
-    <div class="form-group-date">
-        <div class="date-navigator-box">
-            <button class="nav-arrow" onclick="navigasiTanggal(-1)">◀</button>
-            <input type="date" id="tanggalTrip" onchange="prosesDanTampilkan()">
-            <button class="nav-arrow" onclick="navigasiTanggal(1)">▶</button>
-        </div>
-    </div>
-
     <div class="glass-card main-form">
         <div class="form-row-split">
             <div class="input-box">
@@ -88,6 +74,20 @@
     <div id="boxRekomendasiArgo" class="suggestion-card" style="display: none;">
         <div class="suggestion-header">💡 Rekomendasi Taktis Performa</div>
         <div id="isiRekomendasi">Menganalisis riwayat ritase...</div>
+    </div>
+
+    <div class="tabs-modern">
+        <button class="tab-btn-modern active" id="tabHari" onclick="gantiTampilan('hari')">Hari</button>
+        <button class="tab-btn-modern" id="tabMinggu" onclick="gantiTampilan('minggu')">Minggu</button>
+        <button class="tab-btn-modern" id="tabBulan" onclick="gantiTampilan('bulan')">Bulan</button>
+    </div>
+
+    <div class="form-group-date">
+        <div class="date-navigator-box">
+            <button class="nav-arrow" onclick="navigasiTanggal(-1)">◀</button>
+            <input type="date" id="tanggalTrip" onchange="prosesDanTampilkan()">
+            <button class="nav-arrow" onclick="navigasiTanggal(1)">▶</button>
+        </div>
     </div>
 
     <div class="section-title-container">
