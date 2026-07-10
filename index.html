@@ -230,11 +230,12 @@
             gross = nilaiInput;
             if (gross > 10200) {
                 let pengali = databasePolaLevel[levelSaatIni]?.persenPotonganHemat || 0.0735;
-                potongan = Math.floor(gross * pengali);
+                potongan = Math.round(gross * pengali);
                 let batasMaksimal = Math.floor(gross * 0.08);
                 if (potongan > batasMaksimal) potongan = batasMaksimal;
             } else {
-                potongan = (levelSaatIni === 'jawara') ? 0 : (databasePolaLevel[levelSaatIni]?.argoMinDipotong ? Math.floor(gross * 0.075) : 0);
+                let pengaliDefault = databasePolaLevel[levelSaatIni]?.persenPotonganHemat || 0.075;
+                potongan = (levelSaatIni === 'jawara') ? 0 : (databasePolaLevel[levelSaatIni]?.argoMinDipotong ? Math.round(gross * pengaliDefault) : 0);
             }
             net = gross - potongan;
         }
@@ -282,7 +283,7 @@
     }
 
     function editBaris(idUnik) {
-        const idNumeric = Number(idUnik); // Mengonversi ID string kembali ke Number
+        const idNumeric = Number(idUnik); 
         const item = masterData.find(t => t.id === idNumeric);
         if (!item) return;
         idDataSedangDiedit = idNumeric;
@@ -297,7 +298,7 @@
 
     function hapusBaris(idUnik) {
         if (confirm("Hapus data trip ini?")) {
-            const idNumeric = Number(idUnik); // Mengonversi ID string kembali ke Number
+            const idNumeric = Number(idUnik); 
             masterData = masterData.filter(item => item.id !== idNumeric);
             localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
             latihDatabaseKecerdasan();
@@ -314,7 +315,6 @@
         prosesDanTampilkan();
     }
 
-    // ... sisa fungsi JavaScript Anda tetap sama dan aman ...
     function getAwalMinggu(d) {
         let parts = d.split('-');
         let date = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -329,52 +329,66 @@
     }
 
     function latihDatabaseKecerdasan() {
+        const daftarLevel = ['jawara', 'ksatria', 'pejuang', 'anggota'];
         const levelSaatIni = document.getElementById('levelDriverInput').value;
-        let sampelHariLalu = Object.keys(potonganHematManual);
-        let totalHariValidasi = 0;
-        let hariArgoMinBebasPotongan = 0;
-        
-        let totalRasioPersen = 0;
-        let hariValidRasio = 0;
 
-        sampelHariLalu.forEach(tgl => {
-            let tripHematHariItu = masterData.filter(item => item.tanggal === tgl && item.layanan === 'hemat');
-            if(tripHematHariItu.length === 0) return;
+        daftarLevel.forEach(lvl => {
+            let sampelHariLalu = Object.keys(potonganHematManual);
+            let totalHariValidasi = 0;
+            let hariArgoMinBebasPotongan = 0;
+            let totalRasioPersen = 0;
+            let hariValidRasio = 0;
 
-            let hanyaArgoMinimum = tripHematHariItu.every(item => item.gross <= 10200);
-            let potonganAsliHariItu = potonganHematManual[tgl];
+            sampelHariLalu.forEach(tgl => {
+                let tripHematHariItu = masterData.filter(item => {
+                    let itemLvl = item.level_driver || levelSaatIni;
+                    return item.tanggal === tgl && item.layanan === 'hemat' && itemLvl === lvl;
+                });
 
-            if (potonganAsliHariItu !== undefined) {
-                if (hanyaArgoMinimum) {
-                    totalHariValidasi++;
-                    if (potonganAsliHariItu === 0) hariArgoMinBebasPotongan++;
+                if(tripHematHariItu.length === 0) return;
+
+                let potonganAsliHariItu = potonganHematManual[tgl];
+                if (potonganAsliHariItu !== undefined) {
+                    let adaArgoMin = tripHematHariItu.some(item => item.gross <= 10200);
+                    if (adaArgoMin) {
+                        totalHariValidasi++;
+                        let hanyaArgoMinimum = tripHematHariItu.every(item => item.gross <= 10200);
+                        if (hanyaArgoMinimum && potonganAsliHariItu === 0) {
+                            hariArgoMinBebasPotongan++;
+                        }
+                    }
+
+                    let pMin = (lvl === 'jawara') ? false : true;
+                    let totalGrossHematHariItu = tripHematHariItu
+                        .filter(item => item.gross > 10200 || (item.gross <= 10200 && pMin))
+                        .reduce((acc, current) => acc + current.gross, 0);
+
+                    if(totalGrossHematHariItu > 0 && potonganAsliHariItu >= 0) {
+                        totalRasioPersen += (potonganAsliHariItu / totalGrossHematHariItu);
+                        hariValidRasio++;
+                    }
                 }
+            });
 
-                let totalGrossHematHariItu = tripHematHariItu
-                    .filter(item => item.gross > 10200 || (levelSaatIni !== 'jawara'))
-                    .reduce((acc, current) => acc + current.gross, 0);
+            if (lvl === 'jawara') {
+                databasePolaLevel[lvl].argoMinDipotong = false;
+            } else if (totalHariValidasi > 0) {
+                databasePolaLevel[lvl].argoMinDipotong = (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
+            } else {
+                databasePolaLevel[lvl].argoMinDipotong = true;
+            }
+            databasePolaLevel[lvl].totalSampelHari = hariValidRasio;
 
-                if(totalGrossHematHariItu > 0 && potonganAsliHariItu > 0) {
-                    totalRasioPersen += (potonganAsliHariItu / totalGrossHematHariItu);
-                    hariValidRasio++;
+            if(hariValidRasio > 0) {
+                let hasilLatih = totalRasioPersen / hariValidRasio;
+                databasePolaLevel[lvl].persenPotonganHemat = Math.min(0.08, Math.max(0, hasilLatih));
+            } else {
+                const defaultPersen = { jawara: 0.0735, ksatria: 0.075, pejuang: 0.076, anggota: 0.080 };
+                if (!databasePolaLevel[lvl].persenPotonganHemat) {
+                    databasePolaLevel[lvl].persenPotonganHemat = defaultPersen[lvl];
                 }
             }
         });
-
-        if (totalHariValidasi > 0) {
-            databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni === 'jawara') ? false : (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
-            databasePolaLevel[levelSaatIni].totalSampelHari = totalHariValidasi; 
-        } else {
-            databasePolaLevel[levelSaatIni].argoMinDipotong = (levelSaatIni !== 'jawara');
-            databasePolaLevel[levelSaatIni].totalSampelHari = 0;
-        }
-
-        if(hariValidRasio > 0) {
-            let hasilLatih = totalRasioPersen / hariValidRasio;
-            databasePolaLevel[levelSaatIni].persenPotonganHemat = hasilLatih > 0.08 ? 0.08 : hasilLatih;
-        } else {
-            databasePolaLevel[levelSaatIni].persenPotonganHemat = (levelSaatIni === 'jawara') ? 0.0735 : 0.076;
-        }
 
         localStorage.setItem('databasePolaLevelOjol', JSON.stringify(databasePolaLevel));
     }
@@ -393,9 +407,6 @@
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
         const levelDriver = document.getElementById('levelDriverInput').value;
         
-        let polaArgoMinDipotong = databasePolaLevel[levelDriver]?.argoMinDipotong;
-        let pengaliPersenHemat = databasePolaLevel[levelDriver]?.persenPotonganHemat || 0.0735;
-
         let dataTampil = [];
 
         if (modeTampilan === 'hari') {
@@ -477,14 +488,14 @@
                             potBaris = sisaPotonganManualPerHari[tgl];
                         } else {
                             let hitungProp = (trip.gross / (argoHematPerHari[tgl] || 1)) * potonganHematManual[tgl];
-                            potBaris = Math.floor(hitungProp / 100) * 100;
+                            potBaris = Math.round(hitungProp);
                             sisaPotonganManualPerHari[tgl] -= potBaris;
                         }
                     }
                 } else {
                     if (trip.gross > 10200) {
                         let hitungPotonganMentah = trip.gross * pengali;
-                        potBaris = Math.floor(hitungPotonganMentah / 100) * 100;
+                        potBaris = Math.round(hitungPotonganMentah);
                         
                         let batasMaksimal = Math.floor(trip.gross * 0.08);
                         if (potBaris > batasMaksimal) potBaris = batasMaksimal;
@@ -493,7 +504,7 @@
                             potBaris = 0;
                         } else {
                             let hitungPotonganMentah = trip.gross * pengali;
-                            potBaris = Math.floor(hitungPotonganMentah / 100) * 100;
+                            potBaris = Math.round(hitungPotonganMentah);
                         }
                     }
                 }
