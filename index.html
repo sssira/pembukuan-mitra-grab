@@ -137,9 +137,9 @@
     
     let databasePolaLevel = {
         jawara: { argoMinDipotong: false, totalSampelHari: 0, persenPotonganHemat: 0.0735 },
-        ksatria: { argoMinDipotong: true, totalSampelHari: 0, persenPotonganHemat: 0.075 },
-        pejuang: { argoMinDipotong: true, totalSampelHari: 0, persenPotonganHemat: 0.076 },
-        anggota: { argoMinDipotong: true, totalSampelHari: 0, persenPotonganHemat: 0.080 }
+        ksatria: { argoMinDipotong: false, totalSampelHari: 0, persenPotonganHemat: 0.075 },
+        pejuang: { argoMinDipotong: false, totalSampelHari: 0, persenPotonganHemat: 0.076 },
+        anggota: { argoMinDipotong: false, totalSampelHari: 0, persenPotonganHemat: 0.080 }
     };
 
     let modeTampilan = 'hari'; 
@@ -234,8 +234,7 @@
                 let batasMaksimal = Math.floor(gross * 0.08);
                 if (potongan > batasMaksimal) potongan = batasMaksimal;
             } else {
-                let pengaliDefault = databasePolaLevel[levelSaatIni]?.persenPotonganHemat || 0.075;
-                potongan = (levelSaatIni === 'jawara') ? 0 : (databasePolaLevel[levelSaatIni]?.argoMinDipotong ? Math.round(gross * pengaliDefault) : 0);
+                potongan = 0; 
             }
             net = gross - potongan;
         }
@@ -334,8 +333,6 @@
 
         daftarLevel.forEach(lvl => {
             let sampelHariLalu = Object.keys(potonganHematManual);
-            let totalHariValidasi = 0;
-            let hariArgoMinBebasPotongan = 0;
             let totalRasioPersen = 0;
             let hariValidRasio = 0;
 
@@ -349,18 +346,8 @@
 
                 let potonganAsliHariItu = potonganHematManual[tgl];
                 if (potonganAsliHariItu !== undefined) {
-                    let adaArgoMin = tripHematHariItu.some(item => item.gross <= 10200);
-                    if (adaArgoMin) {
-                        totalHariValidasi++;
-                        let hanyaArgoMinimum = tripHematHariItu.every(item => item.gross <= 10200);
-                        if (hanyaArgoMinimum && potonganAsliHariItu === 0) {
-                            hariArgoMinBebasPotongan++;
-                        }
-                    }
-
-                    let pMin = (lvl === 'jawara') ? false : true;
                     let totalGrossHematHariItu = tripHematHariItu
-                        .filter(item => item.gross > 10200 || (item.gross <= 10200 && pMin))
+                        .filter(item => item.gross > 10200)
                         .reduce((acc, current) => acc + current.gross, 0);
 
                     if(totalGrossHematHariItu > 0 && potonganAsliHariItu >= 0) {
@@ -370,13 +357,7 @@
                 }
             });
 
-            if (lvl === 'jawara') {
-                databasePolaLevel[lvl].argoMinDipotong = false;
-            } else if (totalHariValidasi > 0) {
-                databasePolaLevel[lvl].argoMinDipotong = (hariArgoMinBebasPotongan / totalHariValidasi) < 0.5;
-            } else {
-                databasePolaLevel[lvl].argoMinDipotong = true;
-            }
+            databasePolaLevel[lvl].argoMinDipotong = false;
             databasePolaLevel[lvl].totalSampelHari = hariValidRasio;
 
             if(hariValidRasio > 0) {
@@ -421,13 +402,8 @@
                 document.getElementById('potonganAsliInput').value = ''; 
             }
 
-            if (levelDriver === 'jawara') {
-                isiSaran.innerHTML = `Akun terdeteksi <b style='color:#00b14f'>JAWARA</b> (Bebas potongan penyesuaian argo minimum).<br>` + 
-                                     `🎯 Sikat habis orderan <b>GrabBike Hemat Argo Minimum (Rp 10.200)</b> untuk ritase instan tanpa pangkasan komisi harian.`;
-            } else {
-                isiSaran.innerHTML = `Akun non-jawara terdeteksi penyesuaian komisi pada tarif dasar harian.<br>` + 
-                                     `⚠️ Batasi mengambil Hemat minimum jika area macet. Targetkan orderan <b>Hemat Rp 15.000 ke atas</b> atau maksimalkan <b>Bike Standard</b>.`;
-            }
+            isiSaran.innerHTML = `Sesuai aturan dasar pemerintah, tarif minimum <b style='color:#00b14f'>GrabBike Hemat (Rp 10.200)</b> bebas komisi (0%) untuk seluruh level.<br>` + 
+                                 `🎯 Maksimalkan ritase pendek ini untuk mendongkrak pendapatan bersih tanpa potongan harian.`;
 
             dataTampil = masterData.filter(item => item.tanggal === tanggalTerpilih);
         } else if (modeTampilan === 'minggu') {
@@ -451,10 +427,8 @@
         
         masterData.forEach(t => {
             let tgl = t.tanggal;
-            let lvl = t.level_driver || levelDriver;
-            let pMin = databasePolaLevel[lvl]?.argoMinDipotong;
             if (t.layanan === 'hemat') {
-                let kenaPotong = (t.gross > 10200 || (pMin && lvl !== 'jawara'));
+                let kenaPotong = (t.gross > 10200);
                 if (kenaPotong) {
                     argoHematPerHari[tgl] = (argoHematPerHari[tgl] || 0) + t.gross;
                     totalTripHematKenaPotongPerHari[tgl] = (totalTripHematKenaPotongPerHari[tgl] || 0) + 1;
@@ -469,7 +443,6 @@
             let potBaris = 0;
             let tgl = trip.tanggal;
             let lvl = trip.level_driver || levelDriver;
-            let pMin = databasePolaLevel[lvl]?.argoMinDipotong;
             let pengali = databasePolaLevel[lvl]?.persenPotonganHemat || 0.0735;
 
             if (trip.layanan === 'standard') {
@@ -477,9 +450,7 @@
                 totalPotonganStandard += potBaris;
             } else { 
                 if (potonganHematManual[tgl] !== undefined) {
-                    if (trip.gross <= 10200 && lvl === 'jawara') {
-                        potBaris = 0;
-                    } else if (trip.gross <= 10200 && !pMin) {
+                    if (trip.gross <= 10200) {
                         potBaris = 0;
                     } else {
                         counterHematKenaPotongPerHari[tgl] = (counterHematKenaPotongPerHari[tgl] || 0) + 1;
@@ -500,12 +471,7 @@
                         let batasMaksimal = Math.floor(trip.gross * 0.08);
                         if (potBaris > batasMaksimal) potBaris = batasMaksimal;
                     } else {
-                        if (lvl === 'jawara' || !pMin) {
-                            potBaris = 0;
-                        } else {
-                            let hitungPotonganMentah = trip.gross * pengali;
-                            potBaris = Math.round(hitungPotonganMentah);
-                        }
+                        potBaris = 0;
                     }
                 }
                 totalPotonganHemat += potBaris;
@@ -514,6 +480,9 @@
             let netBaris = trip.gross - potBaris;
             totalGross += trip.gross;
             totalNet += netBaris;
+
+            let hitungPersen = trip.gross > 0 ? (potBaris / trip.gross) * 100 : 0;
+            let stringPersen = hitungPersen.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + '%';
 
             let layananBadge = trip.layanan === 'standard' ? 
                 `<span class="badge bg-standard">Standard</span>` : 
@@ -526,7 +495,7 @@
                 ${tdTanggal}
                 <td>${layananBadge}</td>
                 <td>Rp ${trip.gross.toLocaleString('id-ID')}</td>
-                <td class="text-danger">Rp ${potBaris.toLocaleString('id-ID')}</td>
+                <td class="text-danger">Rp ${potBaris.toLocaleString('id-ID')} (${stringPersen})</td>
                 <td class="text-success font-bold">Rp ${netBaris.toLocaleString('id-ID')}</td>
                 <td class="action-cell">
                     <button class="btn-gear" onclick="toggleDropdown(event, '${trip.id}')">⋮</button>
