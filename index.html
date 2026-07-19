@@ -75,9 +75,9 @@
         <button id="btnSubmitTrip" class="btn-primary-modern" onclick="tambahTrip()">Tambah Trip Baru</button>
         
         <button id="btnScanScreenshot" class="btn-scan-modern" onclick="document.getElementById('screenshotInput').click()">
-            📷 Scan Screenshot Grab
+            📷 Scan Screenshot (bisa banyak)
         </button>
-        <input type="file" id="screenshotInput" accept="image/*" style="display: none;" onchange="prosesScreenshot(event)">
+        <input type="file" id="screenshotInput" accept="image/*" multiple style="display: none;" onchange="prosesScreenshot(event)">
     </div>
 
     <div class="glass-card-warning" id="boxPotonganAsliHemat">
@@ -760,36 +760,55 @@
         document.getElementById('ocrModal').style.display = 'none';
         document.body.style.overflow = '';
         hasilOCRSementara = null;
+        window._bulkOCRResults = null;
         // Reset tombol
         const btn = document.getElementById('btnScanScreenshot');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '📷 Scan Screenshot Grab';
+            btn.innerHTML = '📷 Scan Screenshot (bisa banyak)';
         }
     }
 
     async function prosesScreenshot(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const files = Array.from(event.target.files || []);
+        if (files.length === 0) return;
 
-        // Disable tombol
+        // Reset input supaya bisa pilih file yang sama lagi nanti
+        event.target.value = '';
+
         const btnScan = document.getElementById('btnScanScreenshot');
         btnScan.disabled = true;
-        btnScan.innerHTML = '⏳ Membaca...';
+        btnScan.innerHTML = '⏳ Memproses...';
 
-        // Buka modal & tampilkan loading + progress
         bukaModalOCR();
-        document.getElementById('ocrModalTitle').innerText = '📷 Membaca Screenshot...';
         document.getElementById('ocrModalFooter').style.display = 'none';
 
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const imgSrc = e.target.result;
+        const isBulk = files.length > 1;
+        const hasilBerhasil = [];
+        const hasilGagal = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const nomor = i + 1;
+            const total = files.length;
+
+            document.getElementById('ocrModalTitle').innerText = isBulk 
+                ? `📷 Memproses ${nomor}/${total}...` 
+                : '📷 Membaca Screenshot...';
+
+            // Preview + progress
+            const imgSrc = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
 
             document.getElementById('ocrModalBody').innerHTML = `
-                <img src="${imgSrc}" class="ocr-preview-img" alt="Preview Screenshot">
+                <img src="${imgSrc}" class="ocr-preview-img" alt="Preview">
                 <div class="ocr-progress-section">
-                    <div class="ocr-progress-text" id="ocrProgressText">Mempersiapkan OCR...</div>
+                    <div class="ocr-progress-text" id="ocrProgressText">
+                        ${isBulk ? `File ${nomor} dari ${total}` : 'Mempersiapkan OCR...'}
+                    </div>
                     <div class="ocr-progress-bar-bg">
                         <div class="ocr-progress-bar-fill" id="ocrProgressBar" style="width: 5%"></div>
                     </div>
@@ -801,94 +820,97 @@
                     logger: m => {
                         if (m.status === 'recognizing text') {
                             const percent = Math.round(m.progress * 100);
-                            document.getElementById('ocrProgressText').innerText = `Membaca teks... ${percent}%`;
-                            document.getElementById('ocrProgressBar').style.width = `${percent}%`;
-                        } else if (m.status === 'loading language traineddata') {
-                            document.getElementById('ocrProgressText').innerText = 'Memuat model bahasa...';
-                            document.getElementById('ocrProgressBar').style.width = '15%';
+                            const elText = document.getElementById('ocrProgressText');
+                            const elBar = document.getElementById('ocrProgressBar');
+                            if (elText) elText.innerText = isBulk 
+                                ? `File ${nomor}/${total} — Membaca... ${percent}%` 
+                                : `Membaca teks... ${percent}%`;
+                            if (elBar) elBar.style.width = `${percent}%`;
                         }
                     }
                 });
 
-                console.log("=== HASIL OCR ===\n", text);
-
+                console.log(`=== HASIL OCR file ${nomor} ===\n`, text);
                 const hasil = parseGrabOCR(text);
 
-                if (!hasil) {
-                    document.getElementById('ocrModalTitle').innerText = '❌ Gagal Membaca';
-                    document.getElementById('ocrModalBody').innerHTML = `
-                        <img src="${imgSrc}" class="ocr-preview-img" alt="Preview">
-                        <div class="ocr-error-box">
-                            Tidak berhasil membaca data trip dari screenshot.<br><br>
-                            Pastikan screenshot adalah halaman <b>Job Details</b> Grab yang jelas (bukan blur / terpotong).
-                        </div>
-                    `;
-                    document.getElementById('ocrModalFooter').style.display = 'flex';
-                    document.getElementById('ocrBtnSave').style.display = 'none';
-                    return;
+                if (hasil) {
+                    hasil._preview = imgSrc; // simpan preview
+                    hasilBerhasil.push(hasil);
+                } else {
+                    hasilGagal.push(file.name || `File ${nomor}`);
                 }
-
-                // Sukses
-                hasilOCRSementara = hasil;
-                const layananLabel = hasil.layanan === 'hemat' ? 'GrabBike Hemat' : 'GrabBike Standard';
-                const nominalLabel = hasil.isNet ? 'Net Earnings' : 'Gross Revenue';
-
-                let extraRows = '';
-                if (hasil.kode_booking) {
-                    extraRows += `<div class="ocr-result-row"><span>Kode Booking</span><span style="font-size:0.8rem;">${hasil.kode_booking}</span></div>`;
-                }
-                if (hasil.jarak) {
-                    extraRows += `<div class="ocr-result-row"><span>Jarak Tempuh</span><span>${hasil.jarak} km</span></div>`;
-                }
-                if (hasil.biaya_lain > 0) {
-                    extraRows += `<div class="ocr-result-row"><span>Biaya Lainnya</span><span>Rp ${hasil.biaya_lain.toLocaleString('id-ID')}</span></div>`;
-                }
-
-                document.getElementById('ocrModalTitle').innerText = '✅ Data Berhasil Dibaca';
-                document.getElementById('ocrModalBody').innerHTML = `
-                    <img src="${imgSrc}" class="ocr-preview-img" alt="Preview Screenshot">
-                    
-                    <div class="ocr-result-card">
-                        <div class="ocr-result-row">
-                            <span>Tanggal</span>
-                            <span>${hasil.tanggal}</span>
-                        </div>
-                        <div class="ocr-result-row">
-                            <span>Layanan</span>
-                            <span>${layananLabel}</span>
-                        </div>
-                        <div class="ocr-result-row">
-                            <span>${nominalLabel}</span>
-                            <span class="ocr-result-amount">Rp ${hasil.amount.toLocaleString('id-ID')}</span>
-                        </div>
-                        ${extraRows}
-                    </div>
-                    
-                    <p style="font-size:0.8rem; color:#64748b; text-align:center; margin:0;">
-                        Periksa data di atas sebelum menyimpan
-                    </p>
-                `;
-
-                document.getElementById('ocrModalFooter').style.display = 'flex';
-                document.getElementById('ocrBtnSave').style.display = 'block';
-
             } catch (err) {
                 console.error(err);
-                document.getElementById('ocrModalTitle').innerText = '❌ Error';
-                document.getElementById('ocrModalBody').innerHTML = `
-                    <div class="ocr-error-box">
-                        Terjadi kesalahan saat memproses gambar.<br>
-                        Coba lagi dengan screenshot yang lebih jelas.
-                    </div>
-                `;
-                document.getElementById('ocrModalFooter').style.display = 'flex';
-                document.getElementById('ocrBtnSave').style.display = 'none';
+                hasilGagal.push(file.name || `File ${nomor}`);
             }
-        };
-        reader.readAsDataURL(file);
+        }
 
-        // Reset input file
-        event.target.value = '';
+        // ===== Selesai memproses semua =====
+        if (hasilBerhasil.length === 0) {
+            document.getElementById('ocrModalTitle').innerText = '❌ Gagal Membaca';
+            document.getElementById('ocrModalBody').innerHTML = `
+                <div class="ocr-error-box">
+                    Tidak ada screenshot yang berhasil dibaca.<br><br>
+                    Pastikan gambar adalah halaman <b>Job Details</b> Grab yang jelas.
+                </div>
+            `;
+            document.getElementById('ocrModalFooter').style.display = 'flex';
+            document.getElementById('ocrBtnSave').style.display = 'none';
+            btnScan.disabled = false;
+            btnScan.innerHTML = '📷 Scan Screenshot Grab';
+            return;
+        }
+
+        // Simpan hasil untuk digunakan saat simpan
+        window._bulkOCRResults = hasilBerhasil;
+        hasilOCRSementara = hasilBerhasil[0]; // untuk kompatibilitas single
+
+        // Tampilkan ringkasan
+        let listHtml = '';
+        hasilBerhasil.forEach((h, idx) => {
+            const label = h.layanan === 'hemat' ? 'Hemat' : 'Standard';
+            const nominal = `Rp ${h.amount.toLocaleString('id-ID')}`;
+            const kode = h.kode_booking ? `<small style="color:#64748b">${h.kode_booking}</small>` : '';
+            listHtml += `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:0.88rem;">
+                    <div>
+                        <b>${idx + 1}. ${label}</b> — ${h.tanggal}<br>
+                        ${kode}
+                    </div>
+                    <div style="font-weight:700; color:#00b14f;">${nominal}</div>
+                </div>
+            `;
+        });
+
+        let gagalInfo = '';
+        if (hasilGagal.length > 0) {
+            gagalInfo = `<div style="margin-top:12px; padding:10px; background:#fef2f2; border-radius:10px; font-size:0.82rem; color:#b91c1c;">
+                ${hasilGagal.length} file gagal dibaca
+            </div>`;
+        }
+
+        document.getElementById('ocrModalTitle').innerText = isBulk 
+            ? `✅ ${hasilBerhasil.length} Trip Siap Ditambahkan` 
+            : '✅ Data Berhasil Dibaca';
+
+        document.getElementById('ocrModalBody').innerHTML = `
+            <div class="ocr-result-card" style="max-height:280px; overflow-y:auto;">
+                ${listHtml}
+            </div>
+            ${gagalInfo}
+            <p style="font-size:0.8rem; color:#64748b; text-align:center; margin:12px 0 0;">
+                ${isBulk ? 'Semua data di atas akan dimasukkan ke pembukuan' : 'Periksa data sebelum menyimpan'}
+            </p>
+        `;
+
+        document.getElementById('ocrModalFooter').style.display = 'flex';
+        document.getElementById('ocrBtnSave').style.display = 'block';
+        document.getElementById('ocrBtnSave').innerText = isBulk 
+            ? `✅ Simpan ${hasilBerhasil.length} Trip` 
+            : '✅ Simpan ke Pembukuan';
+
+        btnScan.disabled = false;
+        btnScan.innerHTML = '📷 Scan Screenshot Grab';
     }
 
     function parseGrabOCR(text) {
@@ -1003,50 +1025,78 @@
     }
 
     function simpanHasilOCR() {
-        if (!hasilOCRSementara) return;
+        // Ambil daftar hasil (bulk atau single)
+        const daftar = window._bulkOCRResults || (hasilOCRSementara ? [hasilOCRSementara] : []);
+        if (daftar.length === 0) return;
 
-        const hasil = hasilOCRSementara;
+        let ditambahkan = 0;
+        let diupdate = 0;
+        let dilewati = 0;
 
-        // ===== Cek duplikat berdasarkan kode booking =====
-        if (hasil.kode_booking) {
-            const existing = masterData.find(item => item.kode_booking === hasil.kode_booking);
-            if (existing) {
-                const konfirmasi = confirm(
-                    `⚠️ Kode booking ${hasil.kode_booking} sudah ada di pembukuan.\n\n` +
-                    `Apakah ingin memperbarui data yang lama dengan hasil scan terbaru?`
-                );
-                if (!konfirmasi) {
-                    tutupModalOCR();
-                    return;
+        daftar.forEach(hasil => {
+            // Cek duplikat kode booking
+            if (hasil.kode_booking) {
+                const existingIndex = masterData.findIndex(item => item.kode_booking === hasil.kode_booking);
+                if (existingIndex !== -1) {
+                    // Update data lama
+                    masterData.splice(existingIndex, 1);
+                    diupdate++;
                 }
-                // Hapus data lama supaya diganti yang baru
-                masterData = masterData.filter(item => item.kode_booking !== hasil.kode_booking);
             }
-        }
 
-        // Isi form
-        document.getElementById('tanggalTrip').value = hasil.tanggal;
-        document.getElementById('jenisLayanan').value = hasil.layanan;
-        updateLabelInput();
-        document.getElementById('argoInput').value = hasil.amount;
+            // Hitung gross / potongan / net
+            let gross = 0, potongan = 0, net = 0;
+            const levelSaatIni = document.getElementById('levelDriverInput').value;
 
-        // Simpan data tambahan sementara untuk dipakai di tambahTrip
-        window._ocrExtraData = {
-            kode_booking: hasil.kode_booking,
-            jarak: hasil.jarak,
-            biaya_lain: hasil.biaya_lain
-        };
+            if (hasil.layanan === 'standard') {
+                net = hasil.amount;
+                let hitungGrossAwal = net * (100 / 92);
+                gross = Math.floor(hitungGrossAwal / 100) * 100;
+                potongan = gross - net;
+            } else {
+                gross = hasil.amount;
+                if (gross > 10200) {
+                    let pengali = databasePolaLevel[levelSaatIni]?.persenPotonganHemat || 0.0735;
+                    potongan = Math.round(gross * pengali);
+                    let batasMaksimal = Math.floor(gross * 0.08);
+                    if (potongan > batasMaksimal) potongan = batasMaksimal;
+                } else {
+                    potongan = 0;
+                }
+                net = gross - potongan;
+            }
 
-        // Tambahkan trip
-        tambahTrip();
+            masterData.push({
+                id: Date.now() + Math.random() + ditambahkan,
+                tanggal: hasil.tanggal,
+                layanan: hasil.layanan,
+                level_driver: levelSaatIni,
+                gross,
+                potongan,
+                net,
+                kode_booking: hasil.kode_booking || null,
+                jarak: hasil.jarak || null,
+                biaya_lain: hasil.biaya_lain || 0
+            });
 
-        // Bersihkan temporary
-        window._ocrExtraData = null;
+            ditambahkan++;
+        });
 
-        // Tutup modal
+        // Simpan & refresh
+        localStorage.setItem('masterDataOjol', JSON.stringify(masterData));
+        latihDatabaseKecerdasan();
+        prosesDanTampilkan();
+
+        // Bersihkan
+        window._bulkOCRResults = null;
+        hasilOCRSementara = null;
         tutupModalOCR();
 
-        // Scroll ke atas
+        // Feedback
+        let pesan = `✅ Berhasil menambahkan ${ditambahkan} trip.`;
+        if (diupdate > 0) pesan += `\n(${diupdate} data diperbarui karena kode booking sama)`;
+        alert(pesan);
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 </script>
