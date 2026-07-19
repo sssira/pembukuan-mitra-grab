@@ -476,6 +476,7 @@
 
         dataTampil.forEach((trip, index) => {
             let potBaris = 0;
+            let isCapped = false; // flag apakah trip ini kena batas 8%
             let tgl = trip.tanggal;
             let lvl = trip.level_driver || levelDriver;
             let pengali = databasePolaLevel[lvl]?.persenPotonganHemat || 0.0735;
@@ -506,6 +507,7 @@
                         // ===== CAP 8% =====
                         if (potBaris > batasMaksimalTrip) {
                             potBaris = batasMaksimalTrip;
+                            isCapped = true;
                             adaPeringatanMax8 = true;
                         }
 
@@ -518,7 +520,10 @@
                         potBaris = Math.round(hitungPotonganMentah);
                         
                         let batasMaksimal = Math.floor(trip.gross * 0.08);
-                        if (potBaris > batasMaksimal) potBaris = batasMaksimal;
+                        if (potBaris > batasMaksimal) {
+                            potBaris = batasMaksimal;
+                            isCapped = true;
+                        }
                     } else {
                         potBaris = 0;
                     }
@@ -532,6 +537,11 @@
 
             let hitungPersen = trip.gross > 0 ? (potBaris / trip.gross) * 100 : 0;
             let stringPersen = hitungPersen.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + '%';
+
+            // Tambahkan peringatan di persentase jika kena cap 8%
+            if (isCapped) {
+                stringPersen = `<span style="color:#b91c1c; font-weight:700;">${stringPersen} ⚠️</span>`;
+            }
 
             let layananBadge = trip.layanan === 'standard' ? 
                 `<span class="badge bg-standard">Standard</span>` : 
@@ -557,25 +567,9 @@
             tbody.innerHTML += row;
         });
 
-        // ===== Tampilkan peringatan jika input manual > total yang diizinkan 8% =====
+        // Sembunyikan peringatan di bawah input (peringatan sekarang ada di kolom persentase)
         const elPeringatan = document.getElementById('peringatanPotonganMax');
-        if (modeTampilan === 'hari' && potonganHematManual[tanggalTerpilih] !== undefined) {
-            const inputManual = potonganHematManual[tanggalTerpilih];
-            const maxBoleh = totalMaxBolehPerHari[tanggalTerpilih] || 0;
-
-            if (inputManual > maxBoleh && maxBoleh > 0) {
-                const sisa = inputManual - maxBoleh;
-                elPeringatan.style.display = 'block';
-                elPeringatan.innerHTML = `⚠️ Potongan yang diinput (Rp ${inputManual.toLocaleString('id-ID')}) melebihi batas maksimal 8%.<br>
-                Hanya Rp ${maxBoleh.toLocaleString('id-ID')} yang diterapkan. Sisa Rp ${sisa.toLocaleString('id-ID')} tidak dibagikan.`;
-            } else if (adaPeringatanMax8) {
-                elPeringatan.style.display = 'block';
-                elPeringatan.innerHTML = `⚠️ Beberapa trip dibatasi maksimal 8% sesuai aturan.`;
-            } else {
-                elPeringatan.style.display = 'none';
-                elPeringatan.innerHTML = '';
-            }
-        } else {
+        if (elPeringatan) {
             elPeringatan.style.display = 'none';
             elPeringatan.innerHTML = '';
         }
