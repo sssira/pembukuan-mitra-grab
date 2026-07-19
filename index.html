@@ -611,9 +611,15 @@
         document.getElementById('sumGross').innerText = `Rp ${totalGross.toLocaleString('id-ID')}`;
         document.getElementById('totalOrder').innerText = totalOrder;
         document.getElementById('sumPotonganStandard').innerText = `Rp ${totalPotonganStandard.toLocaleString('id-ID')}`;
-        document.getElementById('sumPotonganHemat').innerText = `Rp ${totalPotonganHemat.toLocaleString('id-ID')}`;
+
+        // Potongan Hemat di summary: prioritaskan nilai manual jika ada (mode hari)
+        let tampilPotonganHemat = totalPotonganHemat;
+        if (modeTampilan === 'hari' && potonganHematManual[tanggalTerpilih] !== undefined) {
+            tampilPotonganHemat = potonganHematManual[tanggalTerpilih];
+        }
+        document.getElementById('sumPotonganHemat').innerText = `Rp ${tampilPotonganHemat.toLocaleString('id-ID')}`;
         
-        let totalSemuaPotongan = totalPotonganStandard + totalPotonganHemat;
+        let totalSemuaPotongan = totalPotonganStandard + tampilPotonganHemat;
         document.getElementById('sumPotonganTotal').innerText = `Rp ${totalSemuaPotongan.toLocaleString('id-ID')}`;
 
         // Biaya Lainnya & Argo per km
@@ -1014,7 +1020,7 @@
         if (!amount || amount < 2000) return null;
 
         return {
-            tanggal: tanggal || new Date().toISOString().slice(0, 10),
+            tanggal: tanggal || null,   // biarkan null kalau gagal dibaca
             layanan,
             amount,
             isNet: layanan === 'standard',
@@ -1029,16 +1035,43 @@
         const daftar = window._bulkOCRResults || (hasilOCRSementara ? [hasilOCRSementara] : []);
         if (daftar.length === 0) return;
 
+        // ===== Cek & minta tanggal jika ada yang gagal terbaca =====
+        const butuhTanggal = daftar.filter(h => !h.tanggal);
+        if (butuhTanggal.length > 0) {
+            const contoh = butuhTanggal[0];
+            const defaultTgl = new Date().toISOString().slice(0, 10);
+            const inputUser = prompt(
+                `⚠️ Tanggal tidak terbaca dari ${butuhTanggal.length} screenshot.\n\n` +
+                `Masukkan tanggal yang ingin dipakai (format: YYYY-MM-DD)\n` +
+                `Contoh: 2026-07-01`,
+                defaultTgl
+            );
+
+            if (!inputUser) {
+                // User cancel
+                return;
+            }
+
+            // Validasi sederhana
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(inputUser.trim())) {
+                alert("Format tanggal salah. Gunakan format YYYY-MM-DD (contoh: 2026-07-01)");
+                return;
+            }
+
+            // Terapkan tanggal yang diinput user ke semua yang kosong
+            daftar.forEach(h => {
+                if (!h.tanggal) h.tanggal = inputUser.trim();
+            });
+        }
+
         let ditambahkan = 0;
         let diupdate = 0;
-        let dilewati = 0;
 
         daftar.forEach(hasil => {
             // Cek duplikat kode booking
             if (hasil.kode_booking) {
                 const existingIndex = masterData.findIndex(item => item.kode_booking === hasil.kode_booking);
                 if (existingIndex !== -1) {
-                    // Update data lama
                     masterData.splice(existingIndex, 1);
                     diupdate++;
                 }
