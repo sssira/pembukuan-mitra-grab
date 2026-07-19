@@ -48,6 +48,14 @@
             <span class="font-bold">Total Potongan Komisi:</span>
             <span id="sumPotonganTotal" class="text-danger font-bold">Rp 0</span>
         </div>
+        <div class="detail-row" style="margin-top:6px;">
+            <span>Biaya Lainnya (Platform + Cover):</span>
+            <span id="sumBiayaLain" class="text-danger">Rp 0</span>
+        </div>
+        <div class="detail-row">
+            <span>Rata-rata Argo / km:</span>
+            <span id="sumArgoPerKm" style="font-weight:600;">Rp 0</span>
+        </div>
     </div>
 
     <div class="glass-card main-form">
@@ -263,10 +271,24 @@
             net = gross - potongan;
         }
 
+        // Ambil data tambahan dari OCR (jika ada)
+        const extra = window._ocrExtraData || {};
+
         if (idDataSedangDiedit !== null) {
             masterData = masterData.map(item => {
                 if (item.id === idDataSedangDiedit) {
-                    return { ...item, tanggal: inputTanggal, layanan, level_driver: levelSaatIni, gross, potongan, net };
+                    return { 
+                        ...item, 
+                        tanggal: inputTanggal, 
+                        layanan, 
+                        level_driver: levelSaatIni, 
+                        gross, 
+                        potongan, 
+                        net,
+                        kode_booking: extra.kode_booking || item.kode_booking || null,
+                        jarak: extra.jarak || item.jarak || null,
+                        biaya_lain: extra.biaya_lain !== undefined ? extra.biaya_lain : (item.biaya_lain || 0)
+                    };
                 }
                 return item;
             });
@@ -280,7 +302,10 @@
                 level_driver: levelSaatIni,
                 gross,
                 potongan,
-                net
+                net,
+                kode_booking: extra.kode_booking || null,
+                jarak: extra.jarak || null,
+                biaya_lain: extra.biaya_lain || 0
             });
         }
 
@@ -408,6 +433,7 @@
 
         let totalGross = 0, totalNet = 0, totalOrder = 0;
         let totalPotonganStandard = 0, totalPotonganHemat = 0;
+        let totalBiayaLain = 0, totalJarak = 0, jumlahTripDenganJarak = 0;
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
         const levelDriver = document.getElementById('levelDriverInput').value;
@@ -535,6 +561,13 @@
             totalGross += trip.gross;
             totalNet += netBaris;
 
+            // Akumulasi biaya lain & jarak
+            totalBiayaLain += (trip.biaya_lain || 0);
+            if (trip.jarak && trip.jarak > 0) {
+                totalJarak += trip.jarak;
+                jumlahTripDenganJarak++;
+            }
+
             let hitungPersen = trip.gross > 0 ? (potBaris / trip.gross) * 100 : 0;
             let stringPersen = hitungPersen.toLocaleString('id-ID', { maximumFractionDigits: 2 }) + '%';
 
@@ -582,6 +615,16 @@
         
         let totalSemuaPotongan = totalPotonganStandard + totalPotonganHemat;
         document.getElementById('sumPotonganTotal').innerText = `Rp ${totalSemuaPotongan.toLocaleString('id-ID')}`;
+
+        // Biaya Lainnya & Argo per km
+        document.getElementById('sumBiayaLain').innerText = `Rp ${totalBiayaLain.toLocaleString('id-ID')}`;
+        
+        if (totalJarak > 0) {
+            const argoPerKm = Math.round(totalGross / totalJarak);
+            document.getElementById('sumArgoPerKm').innerText = `Rp ${argoPerKm.toLocaleString('id-ID')} / km`;
+        } else {
+            document.getElementById('sumArgoPerKm').innerText = '-';
+        }
         
         if (modeTampilan === 'hari') {
             document.getElementById('potonganAsliInput').placeholder = `Prediksi: Rp ${totalPotonganHemat.toLocaleString('id-ID')}`;
@@ -661,9 +704,9 @@
 
     function downloadCSV() {
         if(masterData.length === 0) return alert("Tidak ada data untuk diunduh!");
-        let csvContent = "data:text/csv;charset=utf-8,No,Tanggal,Layanan,Argo Kotor,Net\n";
+        let csvContent = "data:text/csv;charset=utf-8,No,Tanggal,Layanan,Argo Kotor,Net,Kode Booking,Jarak (km),Biaya Lain\n";
         masterData.forEach((item, index) => {
-            csvContent += `${index + 1},${item.tanggal},${item.layanan},${item.gross},${item.net}\n`;
+            csvContent += `${index + 1},${item.tanggal},${item.layanan},${item.gross},${item.net},${item.kode_booking || ''},${item.jarak || ''},${item.biaya_lain || 0}\n`;
         });
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -790,6 +833,17 @@
                 const layananLabel = hasil.layanan === 'hemat' ? 'GrabBike Hemat' : 'GrabBike Standard';
                 const nominalLabel = hasil.isNet ? 'Net Earnings' : 'Gross Revenue';
 
+                let extraRows = '';
+                if (hasil.kode_booking) {
+                    extraRows += `<div class="ocr-result-row"><span>Kode Booking</span><span style="font-size:0.8rem;">${hasil.kode_booking}</span></div>`;
+                }
+                if (hasil.jarak) {
+                    extraRows += `<div class="ocr-result-row"><span>Jarak Tempuh</span><span>${hasil.jarak} km</span></div>`;
+                }
+                if (hasil.biaya_lain > 0) {
+                    extraRows += `<div class="ocr-result-row"><span>Biaya Lainnya</span><span>Rp ${hasil.biaya_lain.toLocaleString('id-ID')}</span></div>`;
+                }
+
                 document.getElementById('ocrModalTitle').innerText = '✅ Data Berhasil Dibaca';
                 document.getElementById('ocrModalBody').innerHTML = `
                     <img src="${imgSrc}" class="ocr-preview-img" alt="Preview Screenshot">
@@ -807,6 +861,7 @@
                             <span>${nominalLabel}</span>
                             <span class="ocr-result-amount">Rp ${hasil.amount.toLocaleString('id-ID')}</span>
                         </div>
+                        ${extraRows}
                     </div>
                     
                     <p style="font-size:0.8rem; color:#64748b; text-align:center; margin:0;">
@@ -839,29 +894,21 @@
     function parseGrabOCR(text) {
         const lower = text.toLowerCase();
 
-        // Deteksi layanan
+        // ===== 1. Deteksi layanan =====
         let layanan = null;
-        if (lower.includes('bike hemat') || lower.includes('grab bike hemat') || lower.includes('hemat')) {
-            // Pastikan bukan false positive
-            if (lower.includes('bike hemat') || lower.includes('grabbike hemat') || (lower.includes('hemat') && lower.includes('bike'))) {
-                layanan = 'hemat';
-            }
+        if (lower.includes('bike hemat') || lower.includes('grab bike hemat') || (lower.includes('hemat') && lower.includes('bike'))) {
+            layanan = 'hemat';
+        } else if (lower.includes('bike standard') || lower.includes('grab bike standard') || (lower.includes('standard') && lower.includes('bike'))) {
+            layanan = 'standard';
         }
-        if (!layanan && (lower.includes('bike standard') || lower.includes('grab bike standard') || lower.includes('standard'))) {
-            if (lower.includes('bike standard') || lower.includes('grabbike standard') || (lower.includes('standard') && lower.includes('bike'))) {
-                layanan = 'standard';
-            }
-        }
-
-        // Fallback lebih longgar
+        // Fallback
         if (!layanan) {
             if (lower.includes('hemat')) layanan = 'hemat';
             else if (lower.includes('standard')) layanan = 'standard';
         }
-
         if (!layanan) return null;
 
-        // Ambil tanggal (contoh: 17 Jul 2026 / 19 Jul 2026, 4:51 am)
+        // ===== 2. Tanggal =====
         let tanggal = null;
         const dateMatch = text.match(/(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/i);
         if (dateMatch) {
@@ -875,11 +922,37 @@
             tanggal = `${year}-${month}-${day}`;
         }
 
-        // Ambil nominal
+        // ===== 3. Kode Booking (contoh: A-9JL5PDUWX5WNAV) =====
+        let kode_booking = null;
+        const kodeMatch = text.match(/\b([A-Z]-\w{8,20})\b/);
+        if (kodeMatch) {
+            kode_booking = kodeMatch[1];
+        }
+
+        // ===== 4. Jarak Tempuh (contoh: 12.51 km) =====
+        let jarak = null;
+        const jarakMatch = text.match(/([\d]+[.,][\d]+)\s*km/i) || text.match(/([\d]+)\s*km/i);
+        if (jarakMatch) {
+            jarak = parseFloat(jarakMatch[1].replace(',', '.'));
+        }
+
+        // ===== 5. Biaya Lainnya (Platform Fee + Ride Cover + dll) =====
+        let biaya_lain = 0;
+        // Platform Fee
+        const platformMatch = text.match(/Platform Fee[\s\S]{0,30}?([\d.,]+)/i);
+        if (platformMatch) {
+            biaya_lain += parseInt(platformMatch[1].replace(/[.,]/g, '')) || 0;
+        }
+        // Ride Cover opt-in
+        const coverMatch = text.match(/Ride Cover[\s\S]{0,40}?([\d.,]+)/i);
+        if (coverMatch) {
+            biaya_lain += parseInt(coverMatch[1].replace(/[.,]/g, '')) || 0;
+        }
+
+        // ===== 6. Nominal utama (Net / Gross) =====
         let amount = null;
 
         if (layanan === 'standard') {
-            // Prioritas: Total net earnings
             const patterns = [
                 /Total net earnings[\s\S]{0,100}?Rp\s*([\d.,]+)/i,
                 /net earnings[\s\S]{0,60}?Rp\s*([\d.,]+)/i,
@@ -893,7 +966,6 @@
                 }
             }
         } else {
-            // Hemat: Total gross revenue
             const patterns = [
                 /Total gross revenue[\s\S]{0,100}?Rp\s*([\d.,]+)/i,
                 /gross revenue[\s\S]{0,60}?Rp\s*([\d.,]+)/i,
@@ -908,15 +980,13 @@
             }
         }
 
-        // Fallback terakhir: ambil angka Rp terbesar yang masuk akal
+        // Fallback
         if (!amount || amount < 2000) {
             const allRp = [...text.matchAll(/Rp\s*([\d.,]+)/gi)];
             const numbers = allRp
                 .map(m => parseInt(m[1].replace(/[.,]/g, '')))
                 .filter(n => n >= 3000 && n <= 500000);
-            if (numbers.length) {
-                amount = Math.max(...numbers);
-            }
+            if (numbers.length) amount = Math.max(...numbers);
         }
 
         if (!amount || amount < 2000) return null;
@@ -925,7 +995,10 @@
             tanggal: tanggal || new Date().toISOString().slice(0, 10),
             layanan,
             amount,
-            isNet: layanan === 'standard'
+            isNet: layanan === 'standard',
+            kode_booking: kode_booking || null,
+            jarak: jarak || null,
+            biaya_lain: biaya_lain || 0
         };
     }
 
@@ -934,14 +1007,41 @@
 
         const hasil = hasilOCRSementara;
 
+        // ===== Cek duplikat berdasarkan kode booking =====
+        if (hasil.kode_booking) {
+            const existing = masterData.find(item => item.kode_booking === hasil.kode_booking);
+            if (existing) {
+                const konfirmasi = confirm(
+                    `⚠️ Kode booking ${hasil.kode_booking} sudah ada di pembukuan.\n\n` +
+                    `Apakah ingin memperbarui data yang lama dengan hasil scan terbaru?`
+                );
+                if (!konfirmasi) {
+                    tutupModalOCR();
+                    return;
+                }
+                // Hapus data lama supaya diganti yang baru
+                masterData = masterData.filter(item => item.kode_booking !== hasil.kode_booking);
+            }
+        }
+
         // Isi form
         document.getElementById('tanggalTrip').value = hasil.tanggal;
         document.getElementById('jenisLayanan').value = hasil.layanan;
         updateLabelInput();
         document.getElementById('argoInput').value = hasil.amount;
 
-        // Langsung tambahkan trip
+        // Simpan data tambahan sementara untuk dipakai di tambahTrip
+        window._ocrExtraData = {
+            kode_booking: hasil.kode_booking,
+            jarak: hasil.jarak,
+            biaya_lain: hasil.biaya_lain
+        };
+
+        // Tambahkan trip
         tambahTrip();
+
+        // Bersihkan temporary
+        window._ocrExtraData = null;
 
         // Tutup modal
         tutupModalOCR();
