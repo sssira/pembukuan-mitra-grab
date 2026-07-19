@@ -61,6 +61,10 @@
             <span id="sumBiayaLain" class="text-danger">Rp 0</span>
         </div>
         <div class="detail-row">
+            <span>Total Tip:</span>
+            <span id="sumTip" style="font-weight:600; color:#059669;">Rp 0</span>
+        </div>
+        <div class="detail-row">
             <span>Rata-rata Argo / km:</span>
             <span id="sumArgoPerKm" style="font-weight:600;">Rp 0</span>
         </div>
@@ -286,7 +290,8 @@
                         net,
                         kode_booking: extra.kode_booking || item.kode_booking || null,
                         jarak: extra.jarak || item.jarak || null,
-                        biaya_lain: extra.biaya_lain !== undefined ? extra.biaya_lain : (item.biaya_lain || 0)
+                        biaya_lain: extra.biaya_lain !== undefined ? extra.biaya_lain : (item.biaya_lain || 0),
+                        tip: extra.tip !== undefined ? extra.tip : (item.tip || 0)
                     };
                 }
                 return item;
@@ -304,7 +309,8 @@
                 net,
                 kode_booking: extra.kode_booking || null,
                 jarak: extra.jarak || null,
-                biaya_lain: extra.biaya_lain || 0
+                biaya_lain: extra.biaya_lain || 0,
+                tip: extra.tip || 0
             });
         }
 
@@ -432,7 +438,7 @@
 
         let totalGross = 0, totalNet = 0, totalOrder = 0;
         let totalPotonganStandard = 0, totalPotonganHemat = 0;
-        let totalBiayaLain = 0, totalJarak = 0, jumlahTripDenganJarak = 0;
+        let totalBiayaLain = 0, totalTip = 0, totalJarak = 0, jumlahTripDenganJarak = 0;
         
         const tanggalTerpilih = document.getElementById('tanggalTrip').value;
         const levelDriver = document.getElementById('levelDriverInput').value;
@@ -560,8 +566,9 @@
             totalGross += trip.gross;
             totalNet += netBaris;
 
-            // Akumulasi biaya lain & jarak
+            // Akumulasi biaya lain, tip & jarak
             totalBiayaLain += (trip.biaya_lain || 0);
+            totalTip += (trip.tip || 0);
             if (trip.jarak && trip.jarak > 0) {
                 totalJarak += trip.jarak;
                 jumlahTripDenganJarak++;
@@ -621,8 +628,9 @@
         let totalSemuaPotongan = totalPotonganStandard + tampilPotonganHemat;
         document.getElementById('sumPotonganTotal').innerText = `Rp ${totalSemuaPotongan.toLocaleString('id-ID')}`;
 
-        // Biaya Lainnya & Argo per km
+        // Biaya Lainnya, Tip & Argo per km
         document.getElementById('sumBiayaLain').innerText = `Rp ${totalBiayaLain.toLocaleString('id-ID')}`;
+        document.getElementById('sumTip').innerText = `Rp ${totalTip.toLocaleString('id-ID')}`;
         
         if (totalJarak > 0) {
             const argoPerKm = Math.round(totalGross / totalJarak);
@@ -709,9 +717,9 @@
 
     function downloadCSV() {
         if(masterData.length === 0) return alert("Tidak ada data untuk diunduh!");
-        let csvContent = "data:text/csv;charset=utf-8,No,Tanggal,Layanan,Argo Kotor,Net,Kode Booking,Jarak (km),Biaya Lain\n";
+        let csvContent = "data:text/csv;charset=utf-8,No,Tanggal,Layanan,Argo Kotor,Net,Kode Booking,Jarak (km),Biaya Lain,Tip\n";
         masterData.forEach((item, index) => {
-            csvContent += `${index + 1},${item.tanggal},${item.layanan},${item.gross},${item.net},${item.kode_booking || ''},${item.jarak || ''},${item.biaya_lain || 0}\n`;
+            csvContent += `${index + 1},${item.tanggal},${item.layanan},${item.gross},${item.net},${item.kode_booking || ''},${item.jarak || ''},${item.biaya_lain || 0},${item.tip || 0}\n`;
         });
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -976,6 +984,14 @@
             biaya_lain += parseInt(coverMatch[1].replace(/[.,]/g, '')) || 0;
         }
 
+        // ===== 5b. Tip =====
+        let tip = 0;
+        // Cari "Tip" yang berada di dekat angka (biasanya di bawah Base Earnings)
+        const tipMatch = text.match(/\bTip\b[\s\S]{0,20}?([\d.,]+)/i);
+        if (tipMatch) {
+            tip = parseInt(tipMatch[1].replace(/[.,]/g, '')) || 0;
+        }
+
         // ===== 6. Nominal utama (Net / Gross) =====
         let amount = null;
 
@@ -1025,7 +1041,8 @@
             isNet: layanan === 'standard',
             kode_booking: kode_booking || null,
             jarak: jarak || null,
-            biaya_lain: biaya_lain || 0
+            biaya_lain: biaya_lain || 0,
+            tip: tip || 0
         };
     }
 
@@ -1108,7 +1125,8 @@
                 net,
                 kode_booking: hasil.kode_booking || null,
                 jarak: hasil.jarak || null,
-                biaya_lain: hasil.biaya_lain || 0
+                biaya_lain: hasil.biaya_lain || 0,
+                tip: hasil.tip || 0
             });
 
             ditambahkan++;
