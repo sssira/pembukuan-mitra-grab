@@ -964,11 +964,50 @@
             kode_booking = kodeMatch[1];
         }
 
-        // ===== 4. Jarak Tempuh (contoh: 12.51 km) =====
+        // ===== 4. Jarak Tempuh (contoh: 12.51 km / 2.14 km) =====
         let jarak = null;
-        const jarakMatch = text.match(/([\d]+[.,][\d]+)\s*km/i) || text.match(/([\d]+)\s*km/i);
-        if (jarakMatch) {
-            jarak = parseFloat(jarakMatch[1].replace(',', '.'));
+
+        // Cari semua kemungkinan pola di dekat "km"
+        const polaJarak = [
+            /([\d]+[.,][\d]+)\s*km/i,          // 2.14 km atau 2,14 km
+            /([\d]+)\s*[.,]\s*([\d]+)\s*km/i,  // 2 . 14 km (OCR pecah)
+            /([\d]{1,2})\s*km/i               // 5 km / 12 km (tanpa desimal)
+        ];
+
+        for (const pola of polaJarak) {
+            const m = text.match(pola);
+            if (m) {
+                if (m[2]) {
+                    // Format pecah: 2 . 14
+                    jarak = parseFloat(m[1] + '.' + m[2]);
+                } else {
+                    jarak = parseFloat(m[1].replace(',', '.'));
+                }
+                break;
+            }
+        }
+
+        // Koreksi kesalahan OCR umum: angka terlalu besar kemungkinan kehilangan desimal
+        // Contoh: 214 → 2.14 | 119 → 1.19 | 565 → 5.65
+        if (jarak !== null) {
+            if (jarak > 80) {
+                // Coba bagi 100 (paling umum)
+                const koreksi100 = jarak / 100;
+                if (koreksi100 >= 0.5 && koreksi100 <= 50) {
+                    jarak = Math.round(koreksi100 * 100) / 100;
+                }
+            } else if (jarak > 40) {
+                // Coba bagi 10
+                const koreksi10 = jarak / 10;
+                if (koreksi10 >= 0.5 && koreksi10 <= 40) {
+                    jarak = Math.round(koreksi10 * 100) / 100;
+                }
+            }
+
+            // Batasi nilai yang masuk akal untuk ojol (0.3 km - 60 km)
+            if (jarak < 0.3 || jarak > 60) {
+                jarak = null;
+            }
         }
 
         // ===== 5. Biaya Lainnya (Platform Fee + Ride Cover + dll) =====
