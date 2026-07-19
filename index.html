@@ -75,6 +75,7 @@
     <div class="glass-card-warning" id="boxPotonganAsliHemat">
         <label for="potonganAsliInput" class="warning-label">💡 Potongan Asli Hemat Esok Hari (Deduction)</label>
         <input type="number" id="potonganAsliInput" placeholder="Memuat prediksi..." oninput="simpanPotonganManual()" inputmode="numeric">
+        <div id="peringatanPotonganMax" style="display:none; margin-top:8px; font-size:0.78rem; color:#b91c1c; line-height:1.4; font-weight:600;"></div>
     </div>
 
     <div id="boxRekomendasiArgo" class="suggestion-card" style="display: none;">
@@ -459,8 +460,19 @@
             }
         });
 
+        // ===== Hitung dulu batas maksimal 8% per hari (untuk warning) =====
+        let totalMaxBolehPerHari = {};
+        masterData.forEach(t => {
+            if (t.layanan === 'hemat' && t.gross > 10200) {
+                let maxTrip = Math.floor(t.gross * 0.08);
+                totalMaxBolehPerHari[t.tanggal] = (totalMaxBolehPerHari[t.tanggal] || 0) + maxTrip;
+            }
+        });
+
         let counterHematKenaPotongPerHari = {};
         let sisaPotonganManualPerHari = { ...potonganHematManual };
+        let adaPeringatanMax8 = false;
+        let selisihPotonganManual = 0;
 
         dataTampil.forEach((trip, index) => {
             let potBaris = 0;
@@ -473,20 +485,34 @@
                 totalPotonganStandard += potBaris;
             } else { 
                 if (potonganHematManual[tgl] !== undefined) {
+                    // Ada input manual → distribusi, tapi DIBATASI maksimal 8% per trip
                     if (trip.gross <= 10200) {
                         potBaris = 0;
                     } else {
                         counterHematKenaPotongPerHari[tgl] = (counterHematKenaPotongPerHari[tgl] || 0) + 1;
                         
+                        let batasMaksimalTrip = Math.floor(trip.gross * 0.08);
+                        let hitungProp = 0;
+
                         if (counterHematKenaPotongPerHari[tgl] === totalTripHematKenaPotongPerHari[tgl]) {
-                            potBaris = sisaPotonganManualPerHari[tgl];
+                            // Trip terakhir ambil sisa, tapi tetap dibatasi 8%
+                            hitungProp = sisaPotonganManualPerHari[tgl];
                         } else {
-                            let hitungProp = (trip.gross / (argoHematPerHari[tgl] || 1)) * potonganHematManual[tgl];
-                            potBaris = Math.round(hitungProp);
-                            sisaPotonganManualPerHari[tgl] -= potBaris;
+                            hitungProp = (trip.gross / (argoHematPerHari[tgl] || 1)) * potonganHematManual[tgl];
                         }
+
+                        potBaris = Math.round(hitungProp);
+
+                        // ===== CAP 8% =====
+                        if (potBaris > batasMaksimalTrip) {
+                            potBaris = batasMaksimalTrip;
+                            adaPeringatanMax8 = true;
+                        }
+
+                        sisaPotonganManualPerHari[tgl] -= potBaris;
                     }
                 } else {
+                    // Tidak ada input manual → pakai perhitungan otomatis + max 8%
                     if (trip.gross > 10200) {
                         let hitungPotonganMentah = trip.gross * pengali;
                         potBaris = Math.round(hitungPotonganMentah);
@@ -530,6 +556,29 @@
             </tr>`;
             tbody.innerHTML += row;
         });
+
+        // ===== Tampilkan peringatan jika input manual > total yang diizinkan 8% =====
+        const elPeringatan = document.getElementById('peringatanPotonganMax');
+        if (modeTampilan === 'hari' && potonganHematManual[tanggalTerpilih] !== undefined) {
+            const inputManual = potonganHematManual[tanggalTerpilih];
+            const maxBoleh = totalMaxBolehPerHari[tanggalTerpilih] || 0;
+
+            if (inputManual > maxBoleh && maxBoleh > 0) {
+                const sisa = inputManual - maxBoleh;
+                elPeringatan.style.display = 'block';
+                elPeringatan.innerHTML = `⚠️ Potongan yang diinput (Rp ${inputManual.toLocaleString('id-ID')}) melebihi batas maksimal 8%.<br>
+                Hanya Rp ${maxBoleh.toLocaleString('id-ID')} yang diterapkan. Sisa Rp ${sisa.toLocaleString('id-ID')} tidak dibagikan.`;
+            } else if (adaPeringatanMax8) {
+                elPeringatan.style.display = 'block';
+                elPeringatan.innerHTML = `⚠️ Beberapa trip dibatasi maksimal 8% sesuai aturan.`;
+            } else {
+                elPeringatan.style.display = 'none';
+                elPeringatan.innerHTML = '';
+            }
+        } else {
+            elPeringatan.style.display = 'none';
+            elPeringatan.innerHTML = '';
+        }
 
         document.getElementById('sumNet').innerText = `Rp ${totalNet.toLocaleString('id-ID')}`;
         document.getElementById('sumGross').innerText = `Rp ${totalGross.toLocaleString('id-ID')}`;
